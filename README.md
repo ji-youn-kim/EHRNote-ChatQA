@@ -176,7 +176,7 @@ over the 967 samples.
 
 ## Scoring
 
-### Scoring multiple-choice runs (default)
+### Scoring multiple-choice runs
 
 ```bash
 python scoring/multiturn_qa_scoring.py \
