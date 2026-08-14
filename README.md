@@ -1,7 +1,6 @@
 # EHRNote-ChatQA
 
-Code for **EHRNote-ChatQA**, an evidence-grounded multi-turn clinical
-question-answering benchmark built over longitudinal discharge summaries.
+Official Code for [EHRNote-ChatQA: A Benchmark for Evidence-Grounded Multi-Turn Clinical Question Answering over Longitudinal Discharge Summaries](https://arxiv.org/abs/2606.15735).
 
 The benchmark itself (967 multi-turn samples, 16,072 medical-expert-verified
 QA pairs across 8 clinical categories) will be released separately on
@@ -70,7 +69,7 @@ the HIPAA-compliant deployments, as required for MIMIC-derived content.
 
 ## Dataset
 
-The benchmark is distributed as two tables. Every script here reads them
+The benchmark will be distributed as two tables. Every script here reads them
 through ``core/release_data.py``; point ``--data-dir`` at the directory
 holding both, or pass ``--notes-csv`` / ``--questions-csv``.
 
@@ -147,24 +146,6 @@ python evaluation/multiturn_gpt_evaluate.py \
 
 Add ``--generate`` for free-text mode; the answer CSV then gets a
 ``_generate`` suffix.
-
-Three safeguards are applied when loading and decoding, because each one
-changes what the model is actually scored on:
-
-- **Stop strings.** Generation stops on the chat-template control tokens of
-  every evaluated family in addition to the model's configured EOS. Some
-  models emit their end-of-turn marker as ordinary text rather than the EOS
-  id and keep going, inventing and answering the next user turn; that leaked
-  text would otherwise reach the answer parser.
-- **Mistral-native checkpoints.** A checkpoint shipping `tekken.json` +
-  `params.json` is loaded with `tokenizer_mode/config_format/load_format=
-  "mistral"`. The HF Jinja template for those models injects a ~2.4k-character
-  default system prompt when no system message is passed; `mistral_common`
-  injects nothing, matching every other model.
-- **Chat-template logging.** At load time the run prints what the template
-  wraps around our content and warns when it injects a system prompt or
-  leaves placeholders unrendered. Check that block first if a model's numbers
-  look wrong.
 
 Models evaluated in the paper: Llama-4-Scout-17B-16E-Instruct;
 Qwen3-Next-80B-A3B-Instruct, Qwen3-30B-A3B-Instruct-2507,
