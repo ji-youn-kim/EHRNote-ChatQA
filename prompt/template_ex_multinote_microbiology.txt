@@ -1,0 +1,71 @@
+[Template 1 - Infection Workup from Suspicion to Targeted Therapy]
+Q1. During admission |chartdate or admission_id|, was any infection suspected or diagnosed?
+A1. (Diagnosis.assertion, Diagnosis.time; Event.status)
+Q2. Was any specimen collected for microbiologic testing to evaluate the infection?
+A2. (Specimen.source; Specimen → has_test → Microbiology_Test)
+Q3. From testing of the specimen, was any organism identified?
+A3. (Microbiology_Test → detected → Microbiology_Organism; Microbiology_Test.organism_growth/result)
+Q4. Before identification of the organism, was any empiric therapy started for the infection?
+A4. (Medication.assertion; Medication.time; Medication → administered_for → Diagnosis)
+Q5. After susceptibility results for the organism were available, was the treatment changed or narrowed?
+A5. (Microbiology_Organism → tested_against → Microbiology_Antibiotics; Medication → switched_to → Medication)
+Q6. What was the documented reasoning for selecting the targeted regimen based on those susceptibility results?
+A6. (clinical reasoning from notes linking the susceptibility pattern to the targeted therapy choice; Medication → administered_for → Diagnosis)
+Q7. By discharge, did the infection improve based on clinical or laboratory markers?
+A7. (Medication → improves → Diagnosis/Symptom/Finding; Lab_Test trends; Vital_Sign trends; Outcome.status)
+
+[Template 2 - Culture-Negative vs Culture-Positive Infection Resolution]
+Q1. During admission |chartdate or admission_id|, was any infection clinically suspected even before microbiologic confirmation?
+A1. (Diagnosis.assertion; clinical suspicion)
+Q2. Were any microbiologic tests performed to evaluate the infection, and what were their results?
+A2. (Specimen → has_test → Microbiology_Test; Microbiology_Test.result)
+Q3. If those tests did not confirm an organism, was there other clinical evidence supporting the infection?
+A3. (Lab_Test/Vital_Sign/Diagnostic_Imaging_Test/Physical_Exam → reveals → Diagnosis/Finding)
+Q4. Based on the diagnostic evaluation, was the treatment continued, stopped, or modified?
+A4. (Medication.status; Medication → switched_to → Medication; Medication → administered_for → Diagnosis)
+Q5. After the management decision, did the patient's clinical status improve?
+A5. (Outcome.status; Symptom.status; Vital_Sign/Lab improvement)
+Q6. Was any follow-up or monitoring plan documented at discharge for the infection?
+A6. (Diagnosis → has_instruction → Instruction; Medication → has_instruction → Instruction)
+
+[Template 3 - Antibiotic Resistance-Driven Therapy Escalation]
+Q1. During admission |chartdate or admission_id|, was any organism identified from microbiologic testing?
+A1. (Microbiology_Test → detected → Microbiology_Organism)
+Q2. For the infection caused by the organism, was any treatment initially started?
+A2. (Medication → administered_for → Diagnosis; Medication.time)
+Q3. Were any susceptibility or resistance findings reported for the organism?
+A3. (Microbiology_Organism → tested_against → Microbiology_Antibiotics; Microbiology_Antibiotics.sensitivity; Microbiology_Antibiotics.dilution)
+Q4. Was the treatment modified or escalated based on those susceptibility findings?
+A4. (Medication → switched_to → Medication; Medication.status; clinical reasoning from notes linking resistance findings to the therapy escalation)
+Q5. After the therapy adjustment, did the infection markers or symptoms improve?
+A5. (Medication → improves → Diagnosis/Symptom/Finding; Outcome.status)
+Q6. What treatment regimen was continued at discharge for the infection?
+A6. (Medication.time = discharge)
+
+[Template 4 - Recurrent Infection and Organism Persistence Across Admissions]
+Q1. During the first admission, was any infection diagnosed?
+A1. (Diagnosis.assertion; Diagnosis.time = admission_1)
+Q2. For the infection, was any organism identified from microbiologic testing?
+A2. (Microbiology_Test → detected → Microbiology_Organism)
+Q3. After treatment of the infection, did the same condition recur during a later admission?
+A3. (Diagnosis.status recurrence; Diagnosis.time comparison)
+Q4. During the later episode of the infection, was the same organism detected again or was a different organism identified?
+A4. (Microbiology_Test → detected → Microbiology_Organism organism comparison)
+Q5. How did the treatment approach change compared with the earlier episode?
+A5. (Medication/Procedure → administered_for → Diagnosis; Medication → switched_to → Medication; clinical reasoning from notes linking prior treatment outcome and organism persistence to the revised approach)
+Q6. What was the clinical outcome after management of the recurrent infection?
+A6. (Outcome.status)
+
+[Template 5 - Monitoring Microbiologic Clearance and Treatment Duration Decisions]
+Q1. During admission |chartdate or admission_id|, was any infection identified, and was any organism detected?
+A1. (Diagnosis.assertion; Microbiology_Test → detected → Microbiology_Organism)
+Q2. For treatment of the infection, what therapy was started, and when?
+A2. (Medication.assertion; Medication.time; Medication → administered_for → Diagnosis)
+Q3. After the therapy was initiated, were any follow-up microbiologic tests performed to evaluate treatment response?
+A3. (Microbiology_Test.time after Medication)
+Q4. Did results of those follow-up tests indicate persistence of infection or microbiologic clearance?
+A4. (Microbiology_Test.result; Diagnosis.status)
+Q5. Did those follow-up findings affect continuation or duration of therapy?
+A5. (Medication.duration; Medication.status)
+Q6. Was any discharge plan or outpatient monitoring recommended to ensure resolution of the infection?
+A6. (Diagnosis → has_instruction → Instruction; Medication → has_instruction → Instruction)

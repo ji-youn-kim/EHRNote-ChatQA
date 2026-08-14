@@ -1,0 +1,279 @@
+You are provided with a patient's discharge summaries. You are also provided with an entity category, attribute, relationship schema defined for tagging discharge summaries, along with multi-turn QA set that consists of 1) medical expert multi-turn questions regarding the patient's discharge summaries, 2) the answer evidence, 3) the answer source, 4) content describing how to construct effective distractors. Carefully read the provided patient's discharge summaries, the medical expert questions, answer evidence, answer source, and effective distractor construction content. For each multi-turn question, generate one correct answer choice along with four plausible incorrect answer choices. The correct answer must be uniquely correct, while all incorrect choices must remain plausible enough to be difficult to distinguish.
+
+Primary Directive — Mixed Distractor Strategy:
+Incorrect answer choices must use a mix of two distractor sources to ensure they cannot be eliminated by simple text verification against the notes:
+
+Source A — Note-Grounded With Clinical Reasoning Requirement (approximately 60% of incorrect choices across all questions): Draw content from entities, attributes, relationships, clinical interpretations, or factual context that appear in the patient's discharge summaries. However, combine these note-grounded details in ways that require clinical knowledge to reject. The entities in the distractor should be present in the notes; what makes the distractor wrong is the clinical relationship, interpretation, admission context, or reasoning applied to those entities.
+
+Source B — Clinically Plausible External (approximately 40% of incorrect choices across all questions): Introduce entities, diagnoses, treatments, findings, management approaches, or clinical pathways that are NOT present in the patient's notes but are clinically plausible given the patient's conditions. These represent genuine differential diagnoses, alternative guideline-appropriate treatments, standard-of-care actions that were not taken, or complications and findings that commonly occur in similar clinical situations but did not occur in this patient.
+- Source B distractors must not contradict any explicit statement in the notes. They must be absent, not denied.
+- A model must use parametric clinical knowledge to reject Source B distractors — note-reading alone is insufficient.
+
+The provided effective distractor construction content is reference material to help identify plausible distractor directions. It does not need to be applied one-to-one to the four incorrect answer choices — there is no required mapping between distractor types and answer choices. Use it as guidance to generate the four most plausible incorrect answer choices possible. Each incorrect answer choice must specify its source (A or B) in the reasoning field.
+
+Important:
+- Ensure that the structure and tone of ALL FIVE answer choices are similar. IMPORTANT: "similar" refers to clinical register and sentence structure, NOT length. The correct answer must NOT systematically be the longest or most detailed choice. If the correct answer contains more information than the distractors, either trim the correct answer or elaborate the distractors with plausible additional clinical detail. At least 1-2 incorrect choices per question should be equal to or longer than the correct answer.
+- Avoid using parentheses in the answer choices. Do not include unnecessary deidentified placeholders (e.g., ___) to the correct answer and incorrect answer choices.
+
+Core Task Workflow:
+For each question:
+Step 1: Determine the correct answer
+- Refer to the patient's discharge summaries and answer evidence, answer source to provide the correct answer.
+- Do not infer or hallucinate information that is not clearly stated in the note.
+- Do not copy wording directly from the notes, and make sure to paraphrase the statements across the notes required to answer the question.
+- Use clinically natural language suitable for discharge summary interpretation.
+- Answer only what the question asks. The answer evidence and answer source are provided to help you identify the correct answer, but they may contain far more information than needed. Extract only the specific fact(s) the question is asking for — do not reproduce all the details from the evidence.
+
+Step 2: Identify the referenced entity (applies to Q2 and later questions)
+For Q2 and later questions, identify the entity, concept, or interpretation introduced in the previous answer (Ai-1) that the current question references. For Q1, there is no prior answer, so proceed directly to Step 3 using the discharge summaries and answer evidence.
+
+Step 3: Model alternative interpretations
+Based on the discharge summaries and the effective distractor construction content, generate plausible alternative interpretations of the referenced entity or concept. These alternatives must be clinically coherent. Use a mix of:
+- Note-grounded alternatives (Source A): entities, attributes, relationships, interpretations, and admission-level assignments from the notes that could plausibly be confused with the correct referent
+- Clinically plausible external alternatives (Source B): diagnoses, treatments, management actions, findings, or clinical pathways not in the notes but medically plausible for this patient's presentation
+
+Step 4: Construct answer choices
+Generate:
+- 1 correct answer
+- 4 incorrect answers that are as plausible and difficult to distinguish from the correct answer as possible
+Use the effective distractor construction content as reference to guide the construction of incorrect choices, but do not apply it as a one-to-one template. Select whichever distractor approaches and combinations yield the most plausible four incorrect answer choices.
+Each incorrect answer must:
+- follow a coherent but incorrect clinical reasoning path
+- represent a plausible but factually wrong interpretation
+- NOT be eliminable by simple note-searching for entity presence or absence
+
+Step 4b: Length and Overlap Verification
+Before proceeding to Step 5, verify the following conditions. If any fails, revise before proceeding:
+(a) Length check: The correct answer is NOT the longest of the 5 choices. If it is, trim the correct answer by removing non-essential qualifiers or secondary details, or expand at least 2 incorrect choices by adding plausible clinical detail. The correct answer should be at or below the median length of all 5 choices.
+(b) Inverse length check: At least 1 incorrect choice is noticeably longer than the correct answer (by approximately 15% or more in character count). If not, expand one distractor with additional plausible-but-wrong clinical detail, secondary findings, or temporal context.
+(c) Minimal-pair check: At least 1 incorrect choice shares the same clinical entities, relationship types, and narrative structure as the correct answer, differing in only one clinical dimension (a single entity name, numerical value, date, laterality, causal direction, or admission attribution). If none qualifies, revise the most divergent distractor to be a minimal-pair version.
+(d) Numerical check (if applicable): If the correct answer contains specific numerical values (lab results, dosages, dates, measurements, staging codes), at least 1 distractor uses the same narrative structure with a different clinically plausible number. If not, revise one distractor accordingly. If the correct answer contains no numeric content, skip this check.
+
+Step 4c: Source-Mix Check
+Verify that no more than 2 of the 4 incorrect choices are Source B (clinically plausible external). If 3 or more are Source B, convert one to a Source A distractor by using note-grounded content with a wrong clinical relationship. Maintaining a strong Source A majority ensures distractors cannot be eliminated simply by checking whether entities appear in the notes.
+
+Step 5 (Q2+ only): Apply Cross-Turn Dependency Enforcement, Self-Resolution Test, and Error-Consistent Distractor Requirement (see below)
+
+Distractor Coherence Requirement:
+The QA chain is structured so that each question references entities or clinical concepts introduced in the prior answer.
+Incorrect answer choices should reflect plausible alternative interpretations of the referenced entity or concept, using a mix of Source A and Source B content as described in the Primary Directive.
+
+Correct Answer Requirements:
+The correct answer must:
+- be directly supported by the discharge summaries and evidence
+- use natural clinical language
+- not copy exact phrasing from the notes
+- answer only what the question specifically asks. Do not include background clinical context, related findings, or reasoning steps unless the question directly asks for them.
+- be concise: include only the key facts required to distinguish the correct answer from the distractors. Avoid over-specifying details that are not necessary to answer the question.
+- CRITICAL LENGTH RULE — MANDATORY VERIFICATION:
+  The correct answer must NOT systematically be the longest answer choice. Follow this procedure:
+  1. Before writing the correct answer, mentally draft an "answer skeleton" — the minimal
+     statement that directly answers the question and nothing more. Use this skeleton as
+     the ceiling for the correct answer. The correct answer may add at most one qualifying
+     clause beyond the skeleton.
+  2. After writing all 5 answer choices, verify that the correct answer is at or below the
+     MEDIAN length of all 5 choices. If it is the longest, either:
+     (a) Trim the correct answer by removing qualifiers, temporal context, secondary
+         findings, or enumerations not strictly required to answer the question, OR
+     (b) Expand at least 2 incorrect answers by adding plausible clinical detail, context,
+         or elaboration to make them equal to or longer than the correct answer.
+  3. INVERSE LENGTH REQUIREMENT: For approximately 1 in 5 questions, make the correct
+     answer the SHORTEST choice, with at least 2 incorrect answers being noticeably more
+     detailed. Achieve this by writing a concise factual correct answer and making 2+
+     distractors include plausible but unnecessary elaboration (additional clinical context,
+     hedging language, multi-step reasoning chains, or related-but-unrequested findings).
+  4. Do NOT remove information that the question directly asks about. Only remove
+     elaboration that goes beyond the question's scope. The correct answer must still be
+     unambiguous — it must contain enough information that a clinical expert would agree
+     it is uniquely correct.
+
+Incorrect Answer Choice Requirements:
+Generate exactly four incorrect answer choices that are:
+- A mix of Source A and Source B distractors as described in the Primary Directive. Across all questions combined, aim for approximately 60% Source A and 40% Source B. For any individual question, at least one incorrect choice must be Source A and at least one must be Source B.
+- Clinically plausible and contextually appropriate.
+- Difficult for clinical LLMs to distinguish from the correct answer.
+- Realistic enough that a medical expert reading quickly might find them credible.
+- Free of obvious errors, implausible medical scenarios, or giveaway wording.
+- Matching or EXCEEDING the correct answer in length for at least 1-2 distractors per question. Each distractor must contain equal or greater level of detail compared to the correct answer. It is acceptable and encouraged for some distractors to include additional plausible clinical context, secondary findings, or temporal qualifiers that make them longer than the correct answer. The additional length must be clinically meaningful, not padding.
+- An incorrect answer choice may mix correct and incorrect information. Combining several correct clinical details with one or more incorrect details can make the answer choice hard to distinguish from the correct answer.
+
+Minimal-Pair Distractor Requirement:
+Among the 4 incorrect answer choices for each question, at least 1 (and ideally 2) must be "minimal-pair" distractors that share the vast majority of their text with the correct answer and differ in exactly ONE specific clinical detail.
+
+Construction process:
+1. Copy the correct answer's structure and most of its content.
+2. Change exactly one factual element: a single entity name, a single numerical value, a single date, a single laterality, a single causal relationship, or a single admission attribution.
+3. Ensure the changed element is clinically plausible — not absurd.
+4. Verify the changed element is VERIFIABLY WRONG from the discharge summaries or established clinical knowledge. The changed detail must contradict documented information, not merely be undocumented.
+5. The resulting distractor should have high word overlap with the correct answer.
+
+Example — correct answer: "Blood cultures from the second admission grew Staphylococcus aureus, sensitive to vancomycin and oxacillin."
+Minimal-pair distractor: "Blood cultures from the second admission grew Staphylococcus aureus, sensitive to vancomycin but resistant to oxacillin."
+(One detail changed: oxacillin sensitivity flipped to resistance.)
+
+Non-minimal-pair to AVOID: "Wound cultures from the first admission grew coagulase-negative Staphylococcus, resistant to multiple antibiotics."
+(Multiple details changed: specimen type, admission, organism, susceptibility — too easy to distinguish by surface pattern.)
+
+Exception: For broad summary questions requiring multi-dimensional answers, true single-attribute minimal pairs may be impossible. In these cases, minimize the number of differing dimensions to 2 and note the exception in the reasoning field.
+
+Numerical Precision Requirement:
+When the correct answer contains specific numerical values (lab values, vital signs, medication dosages, dates, durations, measurement values, staging codes), at least one incorrect answer choice must test numerical precision by:
+- Using the same narrative structure and clinical reasoning as the correct answer
+- Changing only the numerical value(s) to a clinically plausible alternative (e.g., a value from a different date in the patient's data, a dosage for a different indication, a measurement from a different time point)
+- The alternative number should be close enough to be confusable — not an order of magnitude different
+
+Source preference: Use a real numeric value from elsewhere in the patient's notes (Source A) when possible. Confirm the distractor number does not appear in the notes in the SAME clinical context as the question asks about — otherwise it may be a duplicate correct answer.
+
+If the correct answer contains no numeric content, this requirement is waived.
+
+Cross-Turn Dependency Enforcement (required for Q2+ questions):
+For Q2 and all subsequent questions, apply the following techniques to ensure answer choices cannot be resolved without prior turn context:
+
+Technique 1 — Shared-Entity Choices: At least 3 of the 4 incorrect choices must reference the same key entities or clinical elements from the notes as the correct answer, but differ in the RELATIONSHIP, INTERPRETATION, REASON, or ADMISSION CONTEXT applied to those entities. Ideally, all 5 answer choices reference the same primary entity. The goal is that no choice can be eliminated by checking whether a specific entity name appears in the notes. Do NOT make each choice name a completely different drug-condition pair, organism, or destination.
+
+Example of what to AVOID (each choice names different entities — self-resolving by note search):
+- A: "Heparin infusion for stent thrombosis"
+- B: "Nitroglycerin drip for unstable angina"
+- C: "Metoprolol for rate control"
+- D: "Clopidogrel loading for new stent placement"
+
+Example of what to DO (shared entity type, different clinical interpretation — requires prior context):
+- A: "Anticoagulation bridging was initiated because imaging confirmed acute thrombus formation in the stent"
+- B: "Anticoagulation bridging was initiated as routine post-procedural prophylaxis per institutional protocol"
+- C: "Anticoagulation bridging was initiated because of new-onset atrial fibrillation detected on telemetry"
+- D: "Anticoagulation was not initiated because the initial imaging was reassuring and symptoms had resolved"
+
+Technique 2 — Pronoun-Preserving Choices: For questions using referential pronouns ("that condition", "those findings", "the treatment", "those episodes", "those medications", "that infection"), at least 2 incorrect choices must be plausible answers for DIFFERENT resolutions of the pronoun. If "that condition" could refer to Condition X (correct, from prior answer) or Condition Y (also documented in the notes), one distractor should be the clinically correct answer assuming the pronoun refers to Condition Y. The model must resolve the pronoun using prior turn context before selecting.
+
+Technique 3 — Reduced Entity Specificity: Where possible, describe clinical reasoning, therapeutic approach, mechanism, or outcome rationale rather than listing specific drug, organism, or diagnosis names as the primary distinguishing feature between choices. Instead of choices that each name different specific drugs (where entity names alone resolve the question), write choices that each describe a different clinical reasoning path using the same general treatment category.
+Applicability: Apply Technique 3 when the question asks about clinical reasoning, mechanism, therapeutic rationale, or causal explanation — where reasoning paths, not entity names, are the distinguishing feature. Do NOT apply Technique 3 when the question explicitly asks for a specific named medication, organism, diagnosis, or procedure — where naming specificity is the clinically relevant answer dimension. For such questions, use Techniques 1 and 2 instead.
+
+WHY/HOW Answer-Choice Guidance:
+When the question asks WHY a clinical decision was made or HOW a clinical course unfolded, all 5 answer choices should describe the same clinical action or outcome but differ in the causal reasoning, mechanism, or contributing factors. For WHY questions, all choices should share the form "Because [reasoning], [action was taken]" — differing only in the reasoning. For HOW questions, all choices should describe the same general process but differ in the sequence, contributing factors, or mechanism. This naturally prevents entity-lookup elimination and strengthens dependency on prior context.
+
+Self-Resolution Test (required for Q2+ questions):
+Before finalizing the answer choices for each Q2+ question, mentally apply this test: If a model with NO chat history reads ONLY the current question, the five answer choices, and the discharge summaries, could it identify the correct answer by checking each choice against the notes for consistency? If yes — meaning only one choice is note-consistent while the others have detectable note-inconsistencies — then redesign the choices.
+Remediation steps if the self-resolution test fails:
+1. Check whether incorrect choices reference entities not in the notes (making them trivially eliminable). If so, revise those choices to use entities FROM the notes with wrong clinical relationships.
+2. Check whether the correct answer is the only one whose clinical relationship matches the notes. If so, create additional incorrect choices where the relationship is also note-consistent but applies to a different referent (one the pronoun could plausibly resolve to without prior context).
+3. After revision, verify that at least 2 incorrect choices are each internally consistent with the notes when read in isolation, and are only distinguishable from the correct answer by knowing which specific entity, interpretation, or admission context was established in the prior turn's answer.
+
+Error-Consistent Distractor Requirement (required for Q2+ questions):
+Among the four incorrect answer choices for each Q2+ question, at least TWO must be "error-consistent" distractors — answers that would be correct (or strongly defensible) if the model had selected a specific incorrect answer at the previous turn. The 2 error-consistent distractors should derive from DIFFERENT prior-turn errors, not the same one. This ensures the error-propagation trap catches models regardless of which specific error they made at the prior turn.
+
+Construction process:
+1. From the step 2 distractor guidance, identify the cross-turn error paths provided.
+2. For each of the 2 error paths, write one Q(n) incorrect choice as the clinically correct answer to Q(n) GIVEN that wrong Q(n-1) answer.
+3. If the Step 2 guidance provides only one error path, construct one error-consistent distractor from it and construct a second by identifying an additional plausible Q(n-1) wrong answer yourself.
+
+When constructing the error-consistent distractors, give priority to minimal-pair implementations. Error-path traps that differ from the correct answer in a subtle, single-dimension way (one causal direction, one admission attribution) are maximally effective.
+
+In the reasoning field for error-consistent distractors, mark: "Error-path: follows from Q[n-1] wrong answer '[brief description]'. If that were correct, this choice would be correct because [clinical reasoning]."
+
+Explanation of Types of Effective Distractors:
+The following distractor types describe approaches for constructing plausible incorrect answer choices. You are not required to apply each type to one incorrect answer choice — use them as needed to generate the four most plausible incorrect answer choices possible.
+
+1) Note-grounded entity substitution with clinical reasoning requirement (Source A): Replace the correct entity or one of its attributes with a related entity or attribute value drawn from the notes, ensuring the substitution requires clinical knowledge to reject. Both the substitute entity and the attribute value must appear in the notes; what is wrong is the clinical relationship between the substituted entity and the question's focus. Prefer single-attribute substitution over multi-attribute substitution. This applies to any entity type: diagnoses, drugs, organisms, procedures, symptoms, dispositions, outcomes, or findings.
+
+2) Clinically plausible alternative approach, standard-of-care variant, or parallel pathway (Source B): Propose an alternative interpretation, diagnosis, etiology, or approach NOT in the notes but clinically plausible for this patient. This type represents a competing explanation for the clinical picture, not a competing action (see Type 3). The model must use parametric medical knowledge to determine this was not the documented interpretation or approach.
+
+3) Plausible-but-absent management action, intervention, or monitoring strategy (Source B): Propose a management action, order, intervention, or arrangement that is NOT documented but is clinically standard or guideline-appropriate for the patient's conditions. This type represents a competing action that was not taken (vs Type 2 which represents a competing explanation). The model must know which specific action was actually taken to reject this distractor. Note: For questions asking what finding, diagnosis, outcome, or symptom was present, Type 3 distractors are less applicable. If a Type 3 distractor would not plausibly compete as an answer to this specific question, substitute an additional Type 1, 4, or 5 distractor instead.
+
+4) Clinical relationship misattribution: causal, temporal, associative, or cross-admission (Source A or B): Misassign a clinical relationship — reversing a causal direction, misattributing an associative link, displacing a temporal sequence, or confusing events across admissions — where rejecting the misattribution requires knowing the typical clinical course or the logical structure of the case.
+
+5) Note-grounded detail with one external wrong element (Source A+B hybrid): Combine several correct clinical details from the notes with one incorrect element from general medical knowledge. The correct elements create credibility; the incorrect element requires clinical knowledge to identify. The wrong element must not contradict any explicit note statement.
+
+6) Cross-admission temporal displacement (Source A): Attribute a correct clinical fact to the wrong admission. The entities and relationships are note-grounded and correct; what makes the distractor wrong is the admission context in which they are placed. Particularly important for multi-admission summary questions. Apply only when the patient has 2 or more admissions and the current question references facts that could plausibly be assigned to different admissions. For single-admission questions with no temporal ambiguity, skip Type 6 and use additional Type 1, 4, or 5 distractors instead.
+
+Reasoning Requirement:
+For each answer choice, provide a brief explanation describing:
+- why the answer choice is correct, and
+- why each incorrect answer choice is incorrect.
+For incorrect answer explanations:
+- For Source A distractors (note-grounded): include a short text span from the discharge summary AND explain what clinical knowledge is needed to distinguish this from the correct answer.
+- For Source B distractors (clinically plausible external): explain what clinical knowledge is needed to reject the choice. Do NOT cite note absence alone as the reason a distractor is wrong.
+- For error-consistent distractors: include the error-path notation as described above.
+- For minimal-pair distractors: explicitly state what single detail differs from the correct answer and label it: "[Minimal-pair: differs in {detail}]"
+- State the source type (A, B, or A+B hybrid) for each incorrect choice.
+
+The output format must be as follows:
+Q1: {medical expert question}
+A1: {correct answer choice}
+A1-Reasoning: {brief explanation why correct}
+I1: {incorrect answer choice 1}
+I1-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]. [Minimal-pair label if applicable]}
+I2: {incorrect answer choice 2}
+I2-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+I3: {incorrect answer choice 3}
+I3-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+I4: {incorrect answer choice 4}
+I4-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+
+Q2: {medical expert question}
+A2: {correct answer choice}
+A2-Reasoning: {brief explanation why correct}
+I1: {incorrect answer choice 1}
+I1-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]. [If error-consistent: Error-path notation]. [Minimal-pair label if applicable]}
+I2: {incorrect answer choice 2}
+I2-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+I3: {incorrect answer choice 3}
+I3-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+I4: {incorrect answer choice 4}
+I4-Reasoning: {Source: [A/B/A+B]. [brief explanation with clinical knowledge required to reject]}
+...
+
+[Entity Category, Attribute, Relationship Schema]
+1. Diagnosis – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+2. Finding – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+3. Symptom – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+4. Procedure – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+5. Outcome – status, assertion, time(dates, times, durations, frequencies)
+6. Vital_Sign – status, value, assertion, time(dates, times, durations, frequencies)
+7. Physical_Exam – status, finding, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+8. Lab_Test – value, abnormal_flag, status, assertion, time(dates, times, durations, frequencies)
+9. Diagnostic_Imaging_Test – status, result, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+10. Specimen – source, assertion, time(dates, times, durations, frequencies)
+11. Microbiology_Test - organism_growth, result, assertion, time(dates, times, durations, frequencies)
+12. Microbiology_Organism - growth, assertion, time(dates, times, durations, frequencies)
+13. Microbiology_Antibiotics - dilution, sensitivity, assertion, time(dates, times, durations, frequencies)
+14. Activity – status, assertion, time(dates, times, durations, frequencies)
+15. Medication – strength, dosage, form_description, form, route, instruction, disp, refills, assertion, time(dates, times, durations, frequencies)
+16. Event – status, assertion, time(dates, times, durations, frequencies)
+17. Allergy – status, assertion, time(dates, times, durations, frequencies)
+18. Medical_Device - status, assertion, time(dates, times, durations, frequencies)
+19. Instruction - instruction_text, assertion, time(dates, times, durations, frequencies)
+is_main attribute is either true or false. If the Diagnosis/Symptom/Finding is the main Diagnosis/Symptom/Finding for the patient during the current admission (e.g., chief complaint, discharge diagnosis(primary), main Diagnosis/Symptom/Finding according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false (e.g., discharge diagnosis(secondary), not main Diagnosis/Symptom/Finding according to context).
+If the Procedure is the main Procedure for the patient during the current admission (e.g., major surgical or invasive procedure, main Procedure according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false.
+abnormal_flag attribute in Lab_Test, is either normal or abnormal.
+
+1. Procedure/Medication -> improves -> Diagnosis/Symptom/Finding
+2. Procedure/Medication -> worsens -> Diagnosis/Symptom/Finding
+3. Procedure/Medication -> causes -> Diagnosis/Symptom/Finding
+4. Procedure/Medication -> administered_for -> Diagnosis/Symptom/Finding
+5. Procedure/Medication -> reveals -> Diagnosis/Symptom/Finding
+6. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> reveals -> Diagnosis/Finding
+7. Specimen -> has_test -> Microbiology_Test/Lab_Test
+8. Microbiology_Test -> detected -> Microbiology_Organism
+9. Microbiology_Organism -> tested_against -> Microbiology_Antibiotics
+10. Microbiology_Organism -> reveals -> Diagnosis/Finding
+11. Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding
+12. Diagnosis/Symptom/Finding -> causes -> Event
+13. Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding/Activity
+14. Outcome/Finding -> after -> Diagnosis/Symptom/Finding
+15. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> resulted_in -> Procedure/Medication
+16. Procedure/Medication -> causes -> Procedure/Medication
+17. Procedure/Medication -> causes -> Event
+18. Procedure/Medication -> switched_to -> Procedure/Medication
+19. Procedure/Medication -> resulted_in -> Outcome/Finding
+20. Outcome/Finding -> after -> Procedure/Medication
+21. Event -> causes -> Diagnosis/Symptom/Finding
+22. Event -> causes -> Procedure/Medication
+23. (any category) -> has_instruction -> Instruction
+The difference between "causes" and "resulted_in" in "Procedure/Medication -> causes -> Diagnosis/Symptom/Finding" and "Procedure/Medication -> resulted_in -> Outcome/Finding" is that "causes" is used when a procedure or medication produces an adverse effect or complication, while "resulted_in" is used when a procedure or medication leads to a desired or expected state or improvement (positive or neutral).
+Similarly, the difference between "causes" and "resulted_in" in "Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding" and "Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding" is that "causes" is used when a diagnosis, symptom, or finding produces an adverse effect or complication, while "resulted_in" is used when a diagnosis, symptom, or finding leads to a desired or expected state or improvement (positive or neutral).
+
+[Patient's Discharge Summaries]
+{discharge_summaries}
+
+[Initial Multi-turn QA]
+{multiturn_qa_step2}

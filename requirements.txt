@@ -1,0 +1,16 @@
+# Versions match the ehrqa_vllm environment used for the paper experiments.
+
+# Core data handling
+pandas==2.3.3
+numpy==2.2.6
+
+# Local-model inference (evaluation/multiturn_gpt_evaluate.py)
+vllm==0.16.0
+transformers==5.2.0
+torch==2.9.1
+huggingface_hub==1.4.1
+
+# API inference (data_generation/* and evaluation/multiturn_gpt_evaluate_api.py)
+openai==2.24.0                       # Azure OpenAI (GPT)
+google-genai==1.65.0                 # Gemini via Vertex AI
+google-cloud-aiplatform==1.143.0     # Vertex AI helpers used by google-genai

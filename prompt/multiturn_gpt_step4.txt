@@ -1,0 +1,122 @@
+You are provided with:
+1. A patient's discharge summaries, which may consist of multiple notes. Each note has a Note #, Chartdate, and Section Headers.
+2. An initial Multi-turn QA set that contains medical expert multi-turn questions, along with the correct answer, answer evidence, and answer source locations for each question.
+Your task is to generate evidence grounding source-location multiple choice questions for each medical expert question.
+
+Task:
+For each medical expert question in the Initial Multi-turn QA, create a new paired source-location question in the form:
+"What exact source(s) from the patient's discharge summaries contain information for your answer Ax: '{exact answer text}' to the previous question: Qx: '{exact question text}'?"
+Then generate:
+- Ax (Correct answer choice)
+- I1–I4 (Incorrect answer choices)
+
+Correct Answer Requirements:
+The provided answer evidence and answer source are for reference only. They may include notes and headers that are redundant — sources that repeat information already covered by other headers. Do not blindly copy the provided answer sources.
+
+Instead, independently determine which notes and headers are needed to support the provided "answer" text:
+- A source (note + header) is necessary if and only if it contains information for the provided answer AND removing it would leave some part of the answer unsupported
+- A source is redundant and must be excluded if another included source already contains that same information for the answer
+- Prefer the most comprehensive header when multiple headers cover the same information for the answer
+- Include all required notes if the answer spans multiple notes
+- Exclude headers that do not contain information for the provided answer
+
+The correct answer choice's notes/headers must be minimal but sufficient: every included source must contribute information for the provided answer, and together they must fully support it.
+
+Multi-Header Source Guidance for Reasoning Questions:
+For questions whose answers involve clinical reasoning chains (e.g., WHY a decision was made, HOW a course unfolded), the correct source set may include multiple headers that together establish the reasoning path. Include all headers necessary to trace the documented reasoning chain, but verify that each header contributes unique information to the reasoning — do not include headers that merely repeat context available in another included header.
+
+Incorrect Answer Requirements:
+Generate exactly four incorrect answers.
+Each must:
+- Contain meaningful errors that prevent full support of the answer
+- Be clearly incorrect under careful inspection
+- Not be trivially dismissible
+Each incorrect answer must include at least one of:
+- incorrect note number, incorrect header, missing required header, inclusion of irrelevant header, mixing correct and incorrect sources
+Additional constraints:
+- An incorrect answer must fail to fully support the answer, even if partially correct
+- Do not create distractors that are supersets of the correct answer that still fully support the answer, or subsets that still fully support the answer.
+- Avoid trivial variations (e.g., removing trivial headers)
+
+Distractor Quality Requirements:
+- At least 2 of I1–I4 must be semantic traps: their header names must plausibly align with the question's surface keywords (e.g., "intervention" → Major Surgical or Invasive Procedure; "outcome" → Discharge Disposition / Discharge Condition; "imaging" → Pertinent Results; "presentation" → History of Present Illness) so a reader looking only at header names could reasonably select them. The distractor must still fail at the content level.
+- At most 1 of I1–I4 may be Category 1a. The other three must be Category 1b, 1c, or 2.
+- These two constraints may overlap: a single distractor that is both a semantic trap and Category 1b/1c/2 counts toward both.
+
+Grounding Rules:
+1. Use only information present in the discharge summaries. Do not invent notes, chartdates, or headers that do not exist.
+2. For headers, include only main section headers (e.g., Brief Hospital Course, Major Surgical or Invasive Procedure, History of Present Illness, Discharge Diagnosis, Discharge Medications, Chief Complaint, Discharge Instructions, Pertinent Results, Past Medical History, Medications on Admission, Allergies, Discharge Condition, Physical Exam). Do not include sub-headers (e.g., Microbiology, Imaging within the Pertinent Result header).
+Header normalization rules:
+- Always write headers in canonical Title Case (e.g., "Brief Hospital Course"), not the raw casing from the note (e.g., NOT "BRIEF HOSPITAL COURSE" or "brief hospital course").
+- Do NOT include trailing punctuation such as ":" or "___" (e.g., write "Physical Exam", NOT "Physical Exam:", "Physical ___:", or "PHYSICAL ___").
+- If a header appears in the note in an anonymized or partially redacted form (e.g., "Physical ___") but clearly corresponds to a common main header, normalize it to the canonical form (e.g., "Physical Exam").
+- If the relevant content lives under a sub-header (e.g., "Microbiology", "Imaging", "Labs") inside "Pertinent Results", write the parent main header ("Pertinent Results") instead. The same rule applies to sub-headers inside "Brief Hospital Course", "Physical Exam", etc.
+- Never invent a header that does not appear in the discharge summary.
+3. The correct answer must be complete and uniquely correct.
+- Independently determine the minimal set of sources (notes + headers) whose content supports the provided answer — do not simply copy the provided answer sources.
+- The provided answer sources are reference only and may contain redundant headers. If a header in the provided answer source does not itself contain information for the provided answer (because that information is already covered by another header), exclude it.
+- If only a subset of the provided answer source's headers are needed to fully support the answer, use only that subset. Important constraint: Do not include any incorrect answer choices that contain that same subset plus additional headers that also contain relevant information, because this would produce multiple correct answers.
+4. Incorrect answers must be clearly incorrect.
+- Each incorrect answer must contain meaningful errors (e.g., incorrect note number, incorrect header, missing critical source, adding an irrelevant source, mixing correct and incorrect sources). Minor variations such as omitting or adding trivial headers should not be used. Each incorrect answer must be obviously insufficient to support the answer.
+- Headers like Brief Hospital Course or History of Present Illness may appear in incorrect answers only if they clearly lack the required information for the answer.
+5. Chartdate accuracy: For both correct and incorrect answer choices, The Note # and Chartdate must match the discharge summaries exactly. Do not introduce incorrect chartdates.
+6. Source formatting must exactly match the discharge summary structure:
+- The sources must be written as (where N is the note number, YYYY-MM-DD is the chartdate, and headers are listed plainly with no surrounding brackets, braces, or quotes):
+Note #N Chartdate: YYYY-MM-DD Headers: Header One, Header Two, Note #N Chartdate: YYYY-MM-DD Headers: Header One, Header Two
+- Multiple source notes must be separated by comma + space, and multiple headers within the same note must also be separated by comma + space.
+- Headers must NOT be wrapped in curly braces, square brackets, or any other delimiter. Write them as a plain comma-separated list immediately after "Headers: ".
+- Concrete example of the required format:
+  Note #1 Chartdate: 2143-11-30 Headers: History of Present Illness, Note #2 Chartdate: 2152-04-30 Headers: History of Present Illness, Brief Hospital Course, Note #3 Chartdate: 2152-05-29 Headers: Brief Hospital Course
+- Concrete examples of FORBIDDEN formats (do NOT do any of these):
+  Note #4 Chartdate: 2178-12-09 Headers: {History of Present Illness, Discharge Diagnosis}    <-- braces around headers
+  Note #1 Chartdate: 2186-06-08 Headers: [History of Present Illness]                            <-- square brackets
+  Note #1 Chartdate: 2186-06-08 Headers: "History of Present Illness"                            <-- quotes
+7. Do not output evidence text beyond the required reasoning fields.
+
+═══════════════════════════════════════════════════════════════════
+REASONING REQUIREMENT
+═══════════════════════════════════════════════════════════════════
+For each answer choice, provide a brief reasoning line:
+
+Correct answer reasoning must explain:
+- Completeness: Why these headers fully contain the information for Ax — what specific information each header contributes toward Ax.
+- Minimality: Why this set is minimal — why removing any single header would leave some part of Ax unsupported.
+
+Incorrect answer reasoning must explain:
+- Category label: Which category the incorrect choice falls into (1a, 1b, 1c, or 2).
+- Category 1a (all irrelevant): State that none of the listed headers contain any information for Ax, and briefly note what these headers contain instead.
+- Category 1b (partial/insufficient): Identify which specific part(s) of Ax are NOT contained in the listed headers.
+- Category 1c (mix of partial and irrelevant): Identify which headers are partially relevant (and what part of Ax they miss), and which headers are completely irrelevant.
+- Category 2 (correct subset + irrelevant extras): State which headers form the correct subset that covers Ax, and for each additional header, explain why it is irrelevant to Ax (what that header actually contains instead, or that it does not mention the topic of Ax). If a header looks relevant by name but does not contain Ax information, explicitly state this (e.g., "Discharge Medications lists current medications at discharge but does not mention the dosage adjustment during hospitalization discussed in Ax").
+
+For each original medical expert question, output exactly:
+Q1-1: What exact source(s) from the patient's discharge summaries contain information for your answer A1: '{exact answer text}' to the previous question: Q1: '{exact question text}'?
+A1-1: {correct answer choice}
+A1-1-Reasoning: Fully covers Ax: {what specific information each header contributes}. Minimal: {why each header is necessary — what part of Ax would be unsupported if it were removed}.
+I1: {incorrect answer choice 1}
+I1-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I2: {incorrect answer choice 2}
+I2-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I3: {incorrect answer choice 3}
+I3-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I4: {incorrect answer choice 4}
+I4-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+
+Q2-1: What exact source(s) from the patient's discharge summaries contain information for your answer A2: '{exact answer text}' to the previous question: Q2: '{exact question text}'?
+A2-1: {correct answer choice}
+A2-1-Reasoning: Fully covers Ax: {what specific information each header contributes}. Minimal: {why each header is necessary — what part of Ax would be unsupported if it were removed}.
+I1: {incorrect answer choice 1}
+I1-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I2: {incorrect answer choice 2}
+I2-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I3: {incorrect answer choice 3}
+I3-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+I4: {incorrect answer choice 4}
+I4-Reasoning: Category {1a/1b/1c/2}. {explanation per category guidelines above}.
+...
+
+[Patient's Discharge Summaries]
+{discharge_summaries}
+
+[Initial Multi-turn QA]
+{multiturn_qa_step4_pre}

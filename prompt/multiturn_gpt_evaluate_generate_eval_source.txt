@@ -1,0 +1,54 @@
+Carefully read the patient's discharge summaries and each source-citation question.
+Your task is to score the model's source-citation output on whether it correctly identifies the notes and headers that contain the supporting information for the MODEL'S OWN content answer.
+
+IMPORTANT — Ground the source score in the MODEL'S content answer, NOT the reference source answer.
+
+CRITICAL — Defer to the Content Pass output:
+The complete output of the content scoring pass (Reasoning{n} + Score{n} for every content question) is provided below in the "[Content Pass Output]" section. Before scoring each source question Q{n}-{m}, look up the paired content question Q{n} in that section and read its "Score{n}: ..." line. If that score is 0, the model's content answer is invalid (hallucinated, off-topic, or wrong on the central clinical point) and there is no valid source set for it. In that case, assign Score 0 to the source question regardless of which notes/headers the model lists, and state in your reasoning that the source score was forced to 0 because the paired content question received Score 0 in the Content Pass Output.
+
+Procedure:
+1. Re-read the model's answer to the paired content question (provided below as "Model Content Answer for Q{n}").
+2. From the discharge summaries, identify the MINIMAL but NECESSARY set of notes and headers that contain the information in the model's content answer. Write this target set out explicitly in your reasoning before scoring.
+3. Use the provided "Reference Correct Content Answer" and "Reference Correct Source Answer" as HINTS ONLY. The model's content answer may legitimately differ from the reference correct content answer; in that case, the minimally necessary source set shifts accordingly. Always anchor on the model's content answer.
+4. Compare the model's source output against the target set you identified in step 2.
+
+Definitions:
+- A header is "necessary" if it contains information that supports the model's content answer.
+- A header is "irrelevant" if it does NOT contain information that supports the model's content answer.
+- Non-minimal but fully relevant is acceptable: if the model lists more headers than the minimum, those extras must each contain information supporting the model's content answer.
+
+=== Scoring Rubric: Source-Citation Questions (strict) ===
+
+- Score 2 (Exact or Near-Exact): The output covers ALL notes and headers that contain information supporting the model's content answer. Every note/header in the output (including any extras beyond the minimal set) contains information supporting the model's content answer. NO irrelevant notes or headers are present, and NO necessary note/header is omitted.
+- Score 1 (Partially Correct): The output covers PART of the notes/headers needed for the model's content answer, but either (a) omits at least one necessary note/header, or (b) includes at least one irrelevant note/header (i.e., a header that does not contain information supporting the model's content answer).
+- Score 0 (Incorrect): The output cites the wrong note number(s), omits the primary required notes/headers entirely, lists only wrong/irrelevant headers, OR the paired content question's Score{n} in the [Content Pass Output] section is 0 (in which case the source score is forced to 0 regardless of what the model lists).
+
+=== General Rules ===
+
+- Score relative to the MODEL's content answer, not the reference correct content/source answer.
+- Be strict: ANY irrelevant header (one that does not support the model's content answer) drops the score below 2, even if all necessary headers are also present.
+- Provide reasoning BEFORE the score for each question. Explicitly list which notes/headers you identified as minimally necessary for the model's content answer, then compare against the model's source output.
+
+=== Output Format (Strict) ===
+
+For each source-citation question (with key 1-1, 2-1, 3-1, ...), output one Reasoning line followed by one Score line. Replace the key with the actual question key, INCLUDING the dash and the trailing number, and with NO curly braces. Do NOT write `Score{1-1}` or `Score1` — write `Score1-1`. The score must be a single integer 0, 1, or 2.
+
+Concrete example for two source-citation questions (replace 1-1 and 2-1 with the actual question keys):
+
+Reasoning1-1: The minimally necessary headers for the model's content answer are Note #2 Pertinent Results and Note #2 Discharge Diagnosis. The model lists both with no irrelevant additions and no missing necessary headers.
+Score1-1: 2
+
+Reasoning2-1: Forced to 0 because the paired content question Q2 received Score 0 in the [Content Pass Output] section, so there is no valid source set for the model's content answer.
+Score2-1: 0
+
+=== Inputs ===
+
+[Discharge Summaries]
+{discharge summaries}
+
+[Content Pass Output]
+(Verbatim output of the content scoring pass — use this to look up Score{n} for the paired content question.)
+{content_pass_output}
+
+[Source Questions with Reference Correct Answers (hints) and Model Content Answers]
+{qas}

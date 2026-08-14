@@ -1,0 +1,65 @@
+[Template 1 - Discharge Readiness: Clinical Stability and Objective Evidence]
+Q1. What was the patient's overall clinical status at discharge during admission |chartdate or admission_id|?
+A1. (Outcome.status; Outcome.time = discharge)
+Q2. Were there any conditions, findings, or symptoms that were improved, resolved, or still active at discharge?
+A2. (Diagnosis.status; Symptom.status; Finding.status; time = discharge)
+Q3. Were there any lab tests, vital signs, physical exams, or diagnostic imaging tests that supported that stability or improvement at discharge?
+A3. (Lab_Test.value/abnormal_flag; Vital_Sign.value/status; Physical_Exam.finding; Diagnostic_Imaging_Test.result at discharge)
+Q4. Among those clinical findings, were any abnormalities still present that could pose short-term risk after discharge?
+A4. (Finding.status; Lab_Test.abnormal_flag; Vital_Sign.status; persistent Diagnosis/Symptom)
+Q5. What was the documented reasoning for determining the patient was safe for discharge despite those residual abnormalities?
+A5. (clinical reasoning from notes linking the residual findings to the discharge readiness assessment; risk mitigation strategies documented)
+Q6. Were any monitoring or contingency instructions provided to address those remaining risks?
+A6. (Any category → has_instruction → Instruction)
+
+[Template 2 - In-Hospital Deterioration, Rescue Interventions, and Outcome Shift]
+Q1. Did the patient clinically deteriorate during admission |chartdate or admission_id|?
+A1. (Event.assertion/time; Outcome.status change; Diagnosis/Symptom/Finding.status change)
+Q2. Were there any clinical findings or assessment results that indicated that deterioration?
+A2. (Lab_Test.abnormal_flag/value; Vital_Sign.status/value; Physical_Exam.finding; Diagnostic_Imaging_Test.result)
+Q3. Were any clinical problems identified as the cause of that deterioration?
+A3. (Diagnosis/Symptom/Finding → causes → Event; Event → causes → Diagnosis/Symptom/Finding)
+Q4. Were any urgent treatments or procedures performed in response?
+A4. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding)
+Q5. Did those interventions stabilize or reverse the deterioration before discharge?
+A5. (Procedure/Medication → resulted_in → Outcome/Finding; Procedure/Medication → improves → Diagnosis/Symptom/Finding; Procedure/Medication → worsens → Diagnosis/Symptom/Finding)
+Q6. What was the patient's final outcome status at discharge, and were any deficits still present?
+A6. (Outcome.status; Activity.status; Diagnosis/Symptom/Finding.status)
+
+[Template 3 - Functional Outcome and Care Needs: Disposition and Supports]
+Q1. What was the patient's functional status at discharge for admission |chartdate or admission_id|?
+A1. (Activity.status; time = discharge; Physical_Exam.finding relevant to function)
+Q2. Were there any clinical problems that contributed to that functional status at discharge?
+A2. (Diagnosis/Symptom/Finding → resulted_in → Outcome/Finding; Outcome → after → Diagnosis/Symptom/Finding)
+Q3. Did the patient require any devices, services, or caregiver support after discharge?
+A3. (Medical_Device.status; Activity.status; Outcome.assertion)
+Q4. What discharge disposition was selected based on that support plan?
+A4. (Outcome.status/time; Activity.status)
+Q5. Was any follow-up or rehabilitation plan documented to improve that functional status?
+A5. (Any category → has_instruction → Instruction; planned/continued Procedure or Medication)
+
+[Template 4 - Longitudinal Recovery Trajectory Across Admissions]
+Q1. Across admissions, how did the patient's outcome status change from each discharge to the next admission?
+A1. (Outcome.status over time; time.category = discharge/admission)
+Q2. During that longitudinal course, were there clinical problems that repeatedly worsened after discharge or failed to resolve?
+A2. (Diagnosis/Symptom/Finding.status over time)
+Q3. Were any factors associated with worsening of those conditions between encounters?
+A3. (Medication/Procedure → worsens → Diagnosis/Symptom/Finding; Event → causes → Diagnosis/Symptom/Finding; Diagnosis/Symptom/Finding → causes → Event)
+Q4. How did the treatment approach evolve to address those factors and the pattern of deterioration?
+A4. (Medication/Procedure → improves → Diagnosis/Symptom/Finding; Medication/Procedure → resulted_in → Outcome/Finding; clinical reasoning from notes linking cross-admission worsening factors to treatment modifications)
+Q5. By the most recent discharge, were any functional limitations related to those conditions still present, and what plan addressed them?
+A5. (Activity.status; Diagnosis/Symptom/Finding.status at discharge; Instruction)
+
+[Template 5 - Treatment Goal Attainment vs Failure: Why the Outcome Was Achieved (or Not)]
+Q1. What was the primary treatment goal during admission |chartdate or admission_id|?
+A1. (Diagnosis/Symptom/Finding.is_main; Diagnosis/Symptom/Finding.assertion)
+Q2. What treatments were administered to manage the condition?
+A2. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding)
+Q3. By discharge, did the condition meet the intended treatment goal?
+A3. (Outcome.status at discharge; Diagnosis/Symptom/Finding.status at discharge; Outcome → after → Procedure/Medication)
+Q4. Were there any lab test, vital sign, physical exam, or diagnostic imaging results that supported the assessment of that treatment outcome?
+A4. (Lab_Test.value/abnormal_flag; Vital_Sign.value/status; Physical_Exam.finding; Diagnostic_Imaging_Test.result)
+Q5. Did the condition fully improve, and if not, were any complications or barriers documented as contributing to the incomplete response?
+A5. (Procedure/Medication → causes → Diagnosis/Symptom/Finding/Event; Diagnosis/Symptom/Finding → causes → Event)
+Q6. How was the follow-up plan designed to address those barriers and the remaining problem?
+A6. (Any category → has_instruction → Instruction; continued/planned Procedure or Medication; clinical reasoning from notes linking residual issues to the follow-up strategy)

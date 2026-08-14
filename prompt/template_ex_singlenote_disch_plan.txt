@@ -1,0 +1,59 @@
+[Template 1 - Discharge Medication Reconciliation]
+Q1. What medications was the patient prescribed at discharge?
+A1. (Medication.assertion, time = discharge; Medication.strength, dosage, route, frequency)
+Q2. Which of those medications were newly started during the hospitalization versus continued from admission?
+A2. (Medication.status comparison: admission vs. discharge; Medication.time)
+Q3. Were any admission medications stopped or held at discharge, and if so, why?
+A3. (Medication.status = stopped/held; Medication → administered_for → Diagnosis/Symptom/Finding or adverse effect)
+Q4. For the new or changed medications, what condition was each prescribed for?
+A4. (Medication → administered_for → Diagnosis/Symptom/Finding)
+Q5. Were any dose adjustments made during the hospitalization before arriving at the final discharge dose, and what drove those changes?
+A5. (Medication.dosage change; Medication → causes → Symptom/Finding; Medication → worsens → Symptom/Finding)
+
+[Template 2 - Discharge Disposition and Care Setting Rationale]
+Q1. Where was the patient discharged to, and what was the stated reason for that disposition?
+A1. (Outcome.status/assertion = discharge disposition; Activity.status; Diagnosis/Finding → resulted_in → Outcome)
+Q2. What was the patient's clinical condition at the time of discharge that supported the disposition decision?
+A2. (Vital_Sign.value, time = discharge; Physical_Exam.finding, time = discharge; Outcome.assertion)
+Q3. What was the documented reasoning for determining the appropriate level of post-discharge care based on those findings?
+A3. (clinical reasoning from notes linking the discharge clinical status to the disposition decision; Activity.status; functional limitations)
+Q4. Were any follow-up services or care arrangements put in place at the receiving facility or at home?
+A4. (Instruction.instruction_text; Event.status = scheduled; Medical_Device/Activity supports)
+Q5. Were there any outstanding clinical issues at discharge that the receiving care setting was expected to manage?
+A5. (Diagnosis/Finding.status = ongoing; Instruction.instruction_text directed to next provider)
+
+[Template 3 - Follow-Up Plan, Outpatient Connections, and Contingency Instructions]
+Q1. Were any follow-up appointments or outpatient referrals arranged at discharge?
+A1. (Event.status = scheduled; Instruction.instruction_text; Instruction.time)
+Q2. What clinical problems was each follow-up appointment intended to address?
+A2. (Diagnosis/Symptom/Finding/Outcome → has_instruction → Instruction)
+Q3. Were any instructions given regarding who to contact and under what circumstances before the scheduled follow-up?
+A3. (Instruction.instruction_text; Symptom/Finding → has_instruction → Instruction with urgency framing)
+Q4. Were there any explicit instructions about substances, behaviors, or lifestyle factors the patient was told to avoid?
+A4. (Instruction.instruction_text; Activity → has_instruction → Instruction; Medication/substance warnings)
+Q5. What should the patient do if they are unable to reach their outpatient provider or feel unsafe?
+A5. (Instruction.instruction_text = emergency contingency; Event → has_instruction → Instruction)
+
+[Template 4 - Symptom Monitoring, Red Flags, and Emergency Planning]
+Q1. Were any symptoms or warning signs that the patient should monitor after discharge documented?
+A1. (Symptom/Finding → has_instruction → Instruction)
+Q2. Which conditions or complications were those warning signs intended to detect or prevent?
+A2. (Diagnosis/Symptom/Finding → has_instruction → Instruction)
+Q3. What was the documented reasoning for emphasizing those specific warning signs based on the patient's hospital course?
+A3. (clinical reasoning from notes linking the hospital course — complications, persistent findings, or high-risk conditions — to the specific warning signs selected)
+Q4. What actions was the patient instructed to take if those symptoms occur?
+A4. (Instruction.instruction_text; may include Event)
+Q5. Were any objective thresholds provided?
+A5. (Instruction.instruction_text; Vital_Sign.value thresholds if present)
+
+[Template 5 - Follow-Up Care, Appointments, and Diagnostic Monitoring]
+Q1. Were any follow-up appointments or referrals arranged at discharge?
+A1. (Instruction.instruction_text; Event.status = scheduled)
+Q2. What medical or psychiatric issues were those follow-ups meant to address?
+A2. (Diagnosis/Symptom/Finding/Outcome → has_instruction → Instruction)
+Q3. Were any follow-up tests such as labs, imaging, or microbiology recommended?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Microbiology_Test planned; Instruction)
+Q4. What was the recommended timing or urgency of follow-up?
+A4. (Instruction.time; Instruction.instruction_text)
+Q5. Were any contingency plans described if follow-up could not be completed?
+A5. (Instruction.instruction_text; case management/social work if applicable)

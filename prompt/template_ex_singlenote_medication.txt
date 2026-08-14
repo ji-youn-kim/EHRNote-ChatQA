@@ -1,0 +1,65 @@
+[Template 1 - Inpatient Initiation, Dose Adjustment, and Tolerability]
+Q1. Were any medications initiated during admission to treat |Diagnosis/Symptom/Finding|?
+A1. (Medication.time = inpatient, Medication → administered_for → Diagnosis/Symptom/Finding)
+Q2. What were the initial dose, route, and frequency?
+A2. (Medication.strength, dosage, route, frequency, form)
+Q3. Did the patient develop any side effects or intolerance after initiation?
+A3. (Medication → causes → Symptom/Finding/Event, Symptom.status; Lab_Test.abnormal_flag if applicable)
+Q4. Was the regimen modified in response to those adverse effects?
+A4. (Medication.dosage change with time; Medication → switched_to → Medication; clinical reasoning from notes linking the adverse effect to the dose adjustment)
+Q5. Did the adjusted regimen improve the medical condition?
+A5. (Medication → improves → Diagnosis/Symptom/Finding, Medication → resulted_in → Outcome)
+Q6. What was the final discharge medication regimen?
+A6. (Medication.time = discharge, Medication.strength, dosage, route, frequency, disp, refills)
+
+[Template 2 - Diagnostic Findings Driving Medication Adjustment]
+Q1. What medications was the patient taking on admission?
+A1. (Medication.time = admission)
+Q2. Were there any abnormal lab tests, imaging findings, or vital sign changes that prompted medication changes?
+A2. (Lab_Test/Diagnostic_Imaging_Test/Vital_Sign → resulted_in → Medication change)
+Q3. What was the documented reasoning for the particular adjustment chosen in response to those abnormal findings?
+A3. (clinical reasoning from notes linking the specific abnormal values to the treatment decision; Medication.dosage/route/frequency change rationale)
+Q4. After those medication adjustments were made, did the relevant clinical parameters improve?
+A4. (Medication → improves → Diagnosis/Symptom/Finding, Improved Lab_Test/Vital_Sign trends)
+Q5. Were any time-limited medications prescribed?
+A5. (Medication.instruction including duration, stop date)
+Q6. Were any monitoring instructions provided at discharge?
+A6. (Medication → has_instruction → Instruction)
+
+[Template 3 - Medication Safety, Allergies, and Adverse Effects]
+Q1. Does the patient have any medication allergies?
+A1. (Allergy.status, assertion)
+Q2. Were any medications avoided or modified due to the allergy history?
+A2. (Medication.assertion with avoidance)
+Q3. Did the patient experience any adverse medication-related complications during the stay?
+A3. (Medication → causes → Diagnosis/Symptom/Event/Finding)
+Q4. Was a replacement medication selected, and what was the documented reasoning for that choice?
+A4. (Medication → switched_to → Medication; clinical reasoning from notes explaining why the alternative was chosen given the adverse effect and allergy profile)
+Q5. Did the alternative medication lead to clinical stabilization?
+A5. (Medication → improves → Diagnosis/Symptom/Finding, Medication → resulted_in → Outcome)
+Q6. Were any safety instructions provided regarding medication use?
+A6. (Medication → has_instruction → Instruction)
+
+[Template 4 - Discharge Medication Reconciliation and Patient Instructions]
+Q1. What medications were prescribed at discharge?
+A1. (Medication.time = discharge; Medication.dosage, Medication.route, Medication.frequency, Medication.disp, Medication.refills)
+Q2. Which of those medications were newly started during admission, and which were continued from before?
+A2. (Medication.assertion; Medication.time comparison)
+Q3. What condition was each newly started medication intended to treat?
+A3. (Medication → administered_for → Diagnosis/Symptom/Finding)
+Q4. Were any pre-admission medications discontinued at discharge, and if so, why?
+A4. (Medication.assertion = discontinued; Medication → causes → Diagnosis/Symptom/Finding; Allergy.status)
+Q5. Were any instructions given to the patient regarding the discharge medications?
+A5. (Medication → has_instruction → Instruction)
+
+[Template 5 - Medication for Complication Management During Hospitalization]
+Q1. Did the patient develop any complications or new conditions during the hospital stay?
+A1. (Diagnosis/Symptom/Finding.time = inpatient; Procedure/Medication → causes → Diagnosis/Symptom/Finding)
+Q2. Were any medications started to manage those complications?
+A2. (Medication.time; Medication → administered_for → Diagnosis/Symptom/Finding)
+Q3. What was the documented reasoning for choosing that treatment approach for the complication?
+A3. (clinical reasoning from notes linking the complication characteristics to the treatment choice; Medication → administered_for → Diagnosis/Symptom/Finding)
+Q4. Did the treatment improve the patient's condition?
+A4. (Medication → improves → Diagnosis/Symptom/Finding; Medication → resulted_in → Outcome)
+Q5. Were the complication-related medications continued or stopped at discharge?
+A5. (Medication.time = discharge; Medication.assertion)

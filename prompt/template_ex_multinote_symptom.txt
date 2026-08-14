@@ -1,0 +1,79 @@
+[Template 1 - Readmission Trigger, Evaluation, and Treatment Response]
+Q1. After discharge on admission |chartdate or admission_id|, was there any symptom that prompted the patient to return to the hospital, and when did it begin?
+A1. (Symptom.is_main, Symptom.time relative to last discharge)
+Q2. Was any condition identified as the cause of the symptom?
+A2. (Diagnosis/Finding → causes → Symptom)
+Q3. Were any laboratory tests, imaging studies, physical examination findings, or vital sign abnormalities used to evaluate the condition?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → reveals → Diagnosis/Finding; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.result)
+Q4. Was any treatment or intervention administered for the symptom or its underlying condition?
+A4. (Medication/Procedure → administered_for → Symptom/Diagnosis/Finding)
+Q5. After the treatment was started, did the symptom improve, persist, or worsen, and was there any clinical evidence supporting the assessment?
+A5. (Medication/Procedure → improves/worsens → Symptom; Symptom.status; relevant Lab_Test/Vital_Sign/Physical_Exam changes)
+Q6. Were any discharge instructions or return precautions provided regarding the symptom or its underlying condition?
+A6. (Symptom → has_instruction → Instruction; Diagnosis → has_instruction → Instruction)
+
+[Template 2 - In-Hospital or Treatment-Related Symptom Development and Management]
+Q1. During the hospitalization on |chartdate|, did the patient develop any new symptom after a medication or procedure was initiated, and when did that symptom appear?
+A1. (Symptom.time during admission; Medication/Procedure.time)
+Q2. Was any medication or procedure suspected to have caused that symptom?
+A2. (Medication/Procedure → causes → Symptom/Finding; Symptom → causes → Diagnosis/Symptom/Finding)
+Q3. Were any diagnostic evaluations performed to assess the suspected adverse effect or to rule out complications?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Vital_Sign/Physical_Exam → reveals → Diagnosis/Symptom/Finding; Lab_Test.abnormal_flag)
+Q4. What was the documented clinical reasoning that confirmed or refuted the relationship between the treatment and the new symptom?
+A4. (clinical reasoning from notes linking the temporal relationship and evaluation findings to the suspected causal mechanism; Medication/Procedure → causes → Symptom)
+Q5. Were any management changes made to address the symptom?
+A5. (Medication.status = held/discontinued; Medication.dosage; Medication → switched_to → Medication; Medication/Procedure → improves/worsens → Symptom)
+Q6. Were any monitoring or precautionary instructions given at discharge to prevent recurrence of the symptom?
+A6. (Symptom → has_instruction → Instruction; Medication → has_instruction → Instruction)
+
+[Template 3 - Recurrent Symptom Pattern Across Admissions]
+Q1. Was there any symptom that occurred repeatedly across multiple hospitalizations for this patient?
+A1. (Symptom appears in >=2 notes; Symptom.time)
+Q2. Were there any events, medication changes, or clinical triggers that occurred before episodes of the symptom?
+A2. (Event → causes → Symptom; Medication.status changes; Activity/environmental triggers across notes)
+Q3. How did the severity or clinical presentation of the symptom differ between hospitalizations?
+A3. (compare Symptom.status; Physical_Exam.finding; Vital_Sign.value associated Symptoms)
+Q4. Were any conditions associated with the symptom across admissions?
+A4. (Diagnosis/Finding/Symptom → causes → Symptom)
+Q5. How did the treatment approach evolve over time across admissions?
+A5. (Medication/Procedure → administered_for → Symptom; clinical reasoning from notes explaining how prior treatment outcomes informed subsequent treatment choices)
+Q6. Among those treatments, were any that improved the symptom, and were any that were ineffective or worsened it?
+A6. (Medication/Procedure → improves → Symptom; Medication/Procedure → worsens → Symptom)
+Q7. Were there hospitalizations where that symptom was absent or well controlled?
+A7. (Symptom.status across notes; Symptom → resulted_in → Outcome/Finding)
+Q8. Were any preventive strategies or maintenance therapies recommended to prevent recurrence of the symptom?
+A8. (Medication.time = discharge; Symptom → has_instruction → Instruction)
+
+[Template 4 - Symptom Progression and Secondary Symptom Development]
+Q1. What was the initial presenting complaint at admission |chartdate or admission_id|?
+A1. (Symptom.is_main; Symptom.time = admission)
+Q2. Was any condition identified as the cause of the symptom?
+A2. (Diagnosis/Symptom/Finding → causes → Symptom)
+Q3. Did the condition or symptom lead to any additional symptoms during the hospitalization?
+A3. (Diagnosis/Symptom/Finding → causes → Symptom)
+Q4. Did any treatment administered for the initial symptom lead to new symptoms?
+A4. (Medication/Procedure → administered_for → Symptom; Medication/Procedure → causes → Symptom)
+Q5. Were any treatments administered to manage the secondary or treatment-related symptoms?
+A5. (Medication/Procedure → administered_for → Symptom)
+Q6. Did those symptoms lead to any complications or clinical events affecting the hospital course?
+A6. (Symptom → causes → Event/Diagnosis/Symptom/Finding; Outcome → after → Symptom)
+Q7. By discharge, which symptoms had resolved and which remained active?
+A7. (Symptom.status at discharge; Outcome.status)
+Q8. Were any monitoring or follow-up instructions provided for those persistent symptoms?
+A8. (Symptom → has_instruction → Instruction)
+
+[Template 5 - Chronic Symptom Burden and Functional Impact Across Admissions]
+Q1. Was there any chronic or persistent symptom that the patient experienced across multiple admissions?
+A1. (Symptom present in >=2 notes; Symptom.status = chronic/persistent)
+Q2. How did the severity or frequency of that symptom change over time?
+A2. (Symptom.status trend; Symptom.time)
+Q3. Did the symptom affect the patient's functional status or daily activities?
+A3. (Symptom → resulted_in → Activity; Activity.status)
+Q4. Were any treatments or interventions used to improve functioning despite the symptom?
+A4. (Medication/Procedure → administered_for → Symptom; Activity.status)
+Q5. What was the documented clinical reasoning that connected the symptom trajectory to the care plan at the most recent discharge?
+A5. (clinical reasoning from notes linking the chronic symptom pattern to the discharge care plan; Symptom → resulted_in → Outcome)
+Q6. Did the symptom result in changes in the patient's care needs or living situation?
+A6. (Symptom → resulted_in → Outcome)
+Q7. Was any long-term management or monitoring plan recommended at the most recent discharge for the symptom?
+A7. (Symptom → has_instruction → Instruction)

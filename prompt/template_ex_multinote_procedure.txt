@@ -1,0 +1,75 @@
+[Template 1 - Procedure Indication, Course, and Discharge Follow-up]
+Q1. Was any procedure performed during the most recent admission, and if so, when was it performed?
+A1. (Procedure.assertion, Procedure.time, Procedure.is_main)
+Q2. Was there any condition that led clinicians to perform the procedure?
+A2. (Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q3. Were there any laboratory tests, imaging, physical examination findings, or vital sign abnormalities that supported performing the procedure?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → resulted_in → Procedure; Lab_Test.value; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.result; Physical_Exam.finding; Vital_Sign.value)
+Q4. What was the documented clinical reasoning that linked those abnormalities to the decision to proceed with the intervention?
+A4. (clinical reasoning from notes connecting pre-procedural findings to the procedure decision; Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q5. After the procedure was performed, did it lead to any complication, event, or new condition, and if so, how was that recognized?
+A5. (Procedure → causes → Event/Diagnosis/Symptom/Finding; Lab_Test/Diagnostic_Imaging_Test/Vital_Sign/Physical_Exam → reveals → Diagnosis/Symptom/Finding)
+Q6. Was any treatment or intervention administered to manage the complication?
+A6. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding; Procedure/Medication → resulted_in → Outcome/Finding)
+Q7. Were any discharge instructions or follow-up plans documented for the procedure or the condition related to it?
+A7. (Procedure → has_instruction → Instruction; Diagnosis/Symptom/Finding → has_instruction → Instruction; time=discharge)
+
+[Template 2 - Procedure-Related Complication Cascade and Escalation of Care]
+Q1. At admission |chartdate or admission_id|, was any procedure performed, and were any complications, events, or abnormal findings observed afterward?
+A1. (Procedure.time; Procedure → causes → Event/Diagnosis/Symptom/Finding)
+Q2. Were any diagnostic evaluations performed to further assess the complication or abnormal finding?
+A2. (Lab_Test/Imaging/Physical_Exam/Vital_Sign → reveals → Diagnosis/Symptom/Finding; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.result)
+Q3. Was any initial treatment or management strategy used to address the complication, and did it improve the condition?
+A3. (Medication/Procedure → administered_for → Diagnosis/Symptom/Finding; Medication/Procedure → improves/worsens → Diagnosis/Symptom/Finding)
+Q4. If the initial management was not fully effective, was the care escalated, and what clinical reasoning drove that decision?
+A4. (Procedure/Medication → switched_to → Procedure/Medication; Event.status; clinical reasoning from notes linking inadequate response to escalation)
+Q5. What was the final outcome or clinical status after management of the complication?
+A5. (Outcome/Finding status; Instruction)
+
+[Template 3 - Emergent Procedure Decision-Making and Execution]
+Q1. Were there any clinical changes or acute events at admission |chartdate or admission_id| that necessitated an emergent or urgent procedure?
+A1. (Event → causes → Procedure, Diagnosis/Symptom/Finding → causes → Procedure, acute changes in Vital_Sign/Lab_Test)
+Q2. Were any diagnostic findings documented that supported performing the procedure?
+A2. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam → resulted_in → Procedure; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.finding)
+Q3. What procedure was performed to address the clinical change, and when during the hospitalization did it occur?
+A3. (Procedure.assertion, Procedure.time, Procedure.is_main)
+Q4. After the procedure was performed, were any intraoperative or immediate post-procedural complications observed?
+A4. (Procedure → causes → Diagnosis/Symptom/Finding/Event)
+Q5. Were any interventions performed to manage the complications following the procedure?
+A5. (Medication/Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q6. How did the patient's clinical status change after the procedure?
+A6. (Procedure → resulted_in → Outcome/Finding)
+Q7. Were any monitoring or follow-up instructions provided for the procedure?
+A7. (Procedure → has_instruction → Instruction)
+
+[Template 4 - Repeat Procedures and Recurrence-Driven Reintervention Across Admissions]
+Q1. During the first admission, was any procedure performed for |Diagnosis/Symptom/Finding|, and what was the immediate post-procedure outcome at discharge?
+A1. (Procedure.time=admission; Procedure → administered_for → Diagnosis/Symptom/Finding; Outcome.status at discharge)
+Q2. After that procedure, did the condition recur in a later admission?
+A2. (Diagnosis/Symptom/Finding.status over time)
+Q3. Were there any tests, examinations, imaging studies, or vital signs that supported the decision to perform another procedure for the recurring condition?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → resulted_in → Procedure)
+Q4. What was the documented clinical reasoning that explained why the condition returned despite the prior intervention?
+A4. (clinical reasoning from notes linking factors such as incomplete resolution, non-adherence, or disease progression across admissions to the recurrence)
+Q5. Was a repeat procedure performed, or was a different procedure chosen?
+A5. (Procedure → switched_to → Procedure)
+Q6. After the procedure, did the patient's clinical outcome improve compared with the outcome after the previous procedure?
+A6. (Procedure → resulted_in → Outcome/Finding; Outcome → after → Procedure)
+
+[Template 5 - Surgical Approach, Anesthesia Management, and Post-Surgical Outcomes]
+Q1. Was any surgical procedure performed during admission |chartdate or admission_id|, and what operative approach was used?
+A1. (Procedure.assertion, Procedure.time, Procedure.is_main)
+Q2. Was there any condition that led clinicians to perform the procedure?
+A2. (Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q3. What was the anesthesia type or anesthesia-related considerations for the surgical procedure?
+A3. (Event/Diagnosis/Finding related to anesthesia; Vital_Sign instability)
+Q4. During the surgery, were there any intraoperative findings or events?
+A4. (Procedure → resulted_in → Outcome/Finding during Procedure; Procedure → causes → Event/Diagnosis/Finding)
+Q5. What was the immediate postoperative clinical status after the surgical procedure?
+A5. (Procedure → resulted_in → Outcome/Finding)
+Q6. Did the surgical procedure result in any postoperative complications?
+A6. (Procedure → causes → Diagnosis/Symptom/Finding/Event)
+Q7. By discharge, how had the patient's condition changed after the procedure?
+A7. (Outcome.status; Diagnosis/Symptom/Finding.status)
+Q8. Were any discharge instructions or follow-up plans provided for the procedure?
+A8. (Procedure → has_instruction → Instruction)

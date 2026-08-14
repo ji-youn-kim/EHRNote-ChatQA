@@ -1,0 +1,73 @@
+[Template 1 - Longitudinal Problem Timeline and Status Transitions]
+Q1. Across all admissions, what diagnoses did the patient have, and when did each first appear?
+A1. (Diagnosis.assertion; Diagnosis.time across notes; first-occurrence time)
+Q2. For those conditions, what was their clinical status at the time of each discharge?
+A2. (Diagnosis.status over time; Outcome.status; time = discharge)
+Q3. Among those conditions, did any recur or lead to re-hospitalization, and what was the interval between episodes?
+A3. (Diagnosis.time comparisons; Event.time related to recurrence)
+Q4. Was there any clinical evidence supporting recurrence or persistence of those conditions during subsequent admissions?
+A4. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → reveals → Diagnosis; time = admission)
+Q5. How did the treatment approach evolve across admissions to address the persistence of those conditions?
+A5. (Medication/Procedure changes across admissions → administered_for → Diagnosis; clinical reasoning from notes linking prior treatment failure to subsequent treatment modification)
+Q6. By the most recent discharge, were any of those conditions still active, and what was the follow-up plan for them?
+A6. (Diagnosis.status = active; Diagnosis → has_instruction → Instruction)
+
+[Template 2 - Diagnostic Reasoning and Differential Resolution]
+Q1. What was the primary condition being evaluated in the most recent admission?
+A1. (Diagnosis.is_main; Diagnosis.assertion; time = admission)
+Q2. Were there any symptoms, findings, or clinical changes that prompted evaluation for that condition?
+A2. (Diagnosis/Symptom/Finding → causes → Diagnosis; time = admission)
+Q3. What diagnostic tests were obtained to evaluate the condition, and were there any abnormal or positive results?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Vital_Sign/Physical_Exam → reveals → Diagnosis; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.result)
+Q4. Compared with the prior admission, were those findings new, worse, or unchanged?
+A4. (Diagnosis.status comparison; Lab_Test value trends; Diagnostic_Imaging_Test comparisons; Vital_Sign trends; Physical_Exam trends)
+Q5. What was the documented clinical reasoning that explained the change in the condition's status from the prior admission?
+A5. (clinical reasoning from notes linking cross-admission finding trends to the current condition status; causal factors documented)
+Q6. By discharge, was the condition confirmed, ruled out, or left as suspected?
+A6. (Diagnosis.status at discharge; Outcome → after → Diagnosis)
+Q7. Were any discharge instructions provided for monitoring or follow-up of the condition?
+A7. (Diagnosis → has_instruction → Instruction)
+
+[Template 3 - Diagnosis Course and Treatment Response Across Admissions]
+Q1. What was the primary diagnosis at admission |chartdate or admission_id|?
+A1. (Diagnosis.is_main; Diagnosis.assertion; time = |admission|)
+Q2. Were there any symptoms, findings, or clinical events that led clinicians to identify the condition?
+A2. (Symptom/Finding → reveals → Diagnosis; Event → causes → Diagnosis)
+Q3. Were any diagnostic tests performed that supported or confirmed the condition?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam → reveals → Diagnosis; abnormal findings)
+Q4. What treatments were administered to manage the condition?
+A4. (Procedure / Medication → administered_for → Diagnosis; Medication.dosage; Medication.route)
+Q5. During hospitalization, how did the condition respond to those treatments?
+A5. (Medication/Procedure → improves or worsens → Diagnosis; Diagnosis.status trend)
+Q6. What was the final status of the condition at discharge?
+A6. (Diagnosis.status at discharge; Outcome.status)
+
+[Template 4 - Differential Diagnosis Reasoning and Confirmation]
+Q1. Was any diagnosis initially suspected on presentation for admission |chartdate or admission_id|?
+A1. (Diagnosis.is_main at admission; Diagnosis.assertion = suspected)
+Q2. During the evaluation of that suspected condition, were any other diagnostic possibilities considered?
+A2. (Diagnosis entities with assertion = possible/suspected/ruled out)
+Q3. Were any diagnostic tests ordered to differentiate between those possibilities?
+A3. (Lab_Test / Diagnostic_Imaging_Test / Microbiology_Test ordered; Specimen → has_test → Lab_Test)
+Q4. Based on those test results, were any possibilities ruled out, and why?
+A4. (Diagnosis.assertion = ruled out; Lab_Test.result; Diagnostic_Imaging_Test findings excluding diagnosis)
+Q5. Were any findings that ultimately confirmed the final diagnosis documented?
+A5. (Lab_Test / Diagnostic_Imaging_Test / Physical_Exam / Vital_Sign → reveals → Diagnosis)
+Q6. During the workup for that condition, were any additional incidental findings or secondary diagnoses discovered?
+A6. (Diagnosis.is_main = false; Diagnostic_Imaging_Test → reveals → Finding/Diagnosis)
+
+[Template 5 - Etiology, Complications, and Prevention of the Admission Diagnosis]
+Q1. What diagnosis was the patient admitted for during admission |chartdate or admission_id|?
+A1. (Diagnosis.is_main; Diagnosis.assertion; time = most recent admission)
+Q2. Were there any underlying conditions, events, or findings that contributed to the development of the condition?
+A2. (Diagnosis/Symptom/Finding → causes → Diagnosis; Event → causes → Diagnosis)
+Q3. Were there any procedures or medications from prior admissions that may have contributed to the condition?
+A3. (Procedure/Medication → causes → Diagnosis; time from prior notes)
+Q4. What was the documented clinical reasoning that connected those contributing factors from the current and prior admissions to the current condition?
+A4. (clinical reasoning from notes linking cross-admission contributing factors to the diagnosis; Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Microbiology_Test → reveals → Diagnosis)
+Q5. Did the condition lead to any complications, secondary diagnoses, or clinical events?
+A5. (Diagnosis → causes → Diagnosis/Symptom/Finding/Event; Diagnosis → resulted_in → Outcome)
+Q6. Were any treatments administered for those complications, and if so, how were they addressed?
+A6. (Procedure / Medication → administered_for → causal Diagnosis; Procedure/Medication → improves/worsens → condition)
+Q7. Were any preventive measures or follow-up instructions provided to reduce the risk of recurrence?
+A7. (Diagnosis → has_instruction → Instruction)

@@ -1,0 +1,63 @@
+[Template 1 - Empiric Antibiotic Initiation for Suspected Infection]
+Q1. Was any infection suspected or diagnosed during admission?
+A1. (Diagnosis.assertion, Diagnosis.status, Diagnosis.time)
+Q2. Were any specimens collected to work up the suspected infection?
+A2. (Specimen.source, Specimen.assertion; Specimen → has_test → Microbiology_Test/Lab_Test)
+Q3. Was any empiric therapy started, and for what indication?
+A3. (Medication.assertion, Medication.time; Medication → administered_for → Diagnosis)
+Q4. What was the documented reasoning for choosing that particular empiric regimen?
+A4. (clinical reasoning from notes linking the suspected infection type, patient risk factors, and documented rationale to the empiric therapy selection)
+Q5. Was the empiric treatment continued, changed, or stopped by discharge?
+A5. (Medication.status at discharge; Medication → switched_to → Medication)
+Q6. What treatment regimen was the patient discharged on, and for how long?
+A6. (Medication.time, Medication.instruction, Medication.duration at discharge)
+
+[Template 2 - Culture Result Driving Therapy Modification]
+Q1. Were any specimens sent for microbiologic testing during admission, and if so, when?
+A1. (Specimen.source, Specimen.time; Specimen → has_test → Microbiology_Test)
+Q2. Were any organisms identified from those cultures?
+A2. (Microbiology_Test → detected → Microbiology_Organism; Microbiology_Organism.growth, Microbiology_Test.result)
+Q3. Were any susceptibility or resistance patterns reported for the organism?
+A3. (Microbiology_Organism → tested_against → Microbiology_Antibiotics; Microbiology_Antibiotics.sensitivity, Microbiology_Antibiotics.dilution)
+Q4. Was the treatment regimen adjusted based on those susceptibility results?
+A4. (Medication → switched_to → Medication; Medication.assertion, Medication.time; clinical reasoning from notes linking susceptibility findings to therapy change)
+Q5. Did the patient's infection-related signs and symptoms improve after the adjustment?
+A5. (Medication → improves → Diagnosis/Symptom/Finding; Vital_Sign/Lab_Test trends; Outcome.status)
+
+[Template 3 - Culture-Negative Infection Workup and Clinical Decision-Making]
+Q1. Was an infection suspected during admission, and what was the clinical basis?
+A1. (Diagnosis.assertion; Symptom.assertion; Physical_Exam/Vital_Sign/Lab_Test → reveals → Diagnosis/Finding)
+Q2. What microbiology tests were performed, and what were the results?
+A2. (Specimen → has_test → Microbiology_Test; Microbiology_Test.result, Microbiology_Organism.growth)
+Q3. Since those cultures did not identify an organism, was there other clinical evidence supporting or refuting the infection?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Vital_Sign → reveals → Diagnosis/Finding; Lab_Test.value, Lab_Test.abnormal_flag)
+Q4. What was the documented clinical reasoning for the decision to continue or discontinue treatment in the setting of those inconclusive results?
+A4. (Medication.status, Medication.assertion; clinical reasoning from notes explaining the treatment decision in the setting of negative cultures)
+Q5. What was the patient's clinical status at discharge, and was any follow-up for the suspected infection recommended?
+A5. (Outcome.status; Diagnosis/Medication → has_instruction → Instruction)
+
+[Template 4 - Infection as a Complication of Primary Admission]
+Q1. What was the primary reason for this patient's admission?
+A1. (Diagnosis.is_main, Diagnosis.assertion; Event.status)
+Q2. Did the patient develop a new infection during the hospitalization as a complication?
+A2. (Diagnosis.assertion, Diagnosis.time; Event → causes → Diagnosis; Procedure → causes → Diagnosis)
+Q3. Were any specimens collected and what microbiologic testing was performed for the new infection?
+A3. (Specimen.source, Specimen.time; Specimen → has_test → Microbiology_Test; Microbiology_Test.result)
+Q4. Was any treatment started for the infection, and how did it affect the patient's clinical course?
+A4. (Medication → administered_for → Diagnosis; Medication → improves → Diagnosis/Symptom/Finding; Outcome.status)
+Q5. Was any follow-up imaging, laboratory testing, or repeat culture recommended at discharge to confirm resolution?
+A5. (Diagnostic_Imaging_Test/Lab_Test/Microbiology_Test → has_instruction → Instruction; Instruction.instruction_text)
+
+[Template 5 - Monitoring Microbiologic Clearance]
+Q1. Was any infection identified during admission, and was an organism detected?
+A1. (Diagnosis.assertion; Microbiology_Test → detected → Microbiology_Organism)
+Q2. Was any treatment started, and when?
+A2. (Medication.assertion/time; Medication → administered_for → Diagnosis)
+Q3. Were any follow-up microbiology tests performed?
+A3. (Microbiology_Test.time after initial test)
+Q4. Did follow-up testing show persistent organism growth or microbiologic clearance?
+A4. (Microbiology_Test.organism_growth/result; Diagnosis.status)
+Q5. How were the duration and continuation of therapy determined based on those follow-up results?
+A5. (Medication.duration/status; clinical reasoning from notes linking clearance/persistence findings to the treatment duration decision)
+Q6. What was the infection status and treatment plan at discharge?
+A6. (Outcome.status; Medication.time = discharge; Diagnosis/Medication → has_instruction → Instruction)

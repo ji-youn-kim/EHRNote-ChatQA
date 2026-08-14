@@ -1,0 +1,71 @@
+[Template 1 - Medication Intolerance, Adverse Effects, and Regimen Switching]
+Q1. Was any medication initiated to treat |Diagnosis/Symptom/Finding| during admission |chartdate or admission_id|?
+A1. (Medication.time; Medication → administered_for → Diagnosis/Symptom/Finding)
+Q2. After that medication was started, did the patient develop any adverse symptoms, complications, or clinical events?
+A2. (Medication → causes → Diagnosis/Symptom/Event/Finding)
+Q3. Were any clinical findings or diagnostic abnormalities documented that suggested the adverse effect was related to the medication?
+A3. (Symptom.status; Lab_Test.abnormal_flag = abnormal; Medication → causes → Event)
+Q4. Was the medication switched in response, and if so, what was the documented reasoning for choosing the replacement?
+A4. (Medication.status; Medication → switched_to → Medication/Procedure; clinical reasoning from notes explaining the rationale for the alternative selection)
+Q5. After the alternative treatment was started, did the patient's condition improve without recurrence of the adverse effect?
+A5. (Medication/Procedure → improves → Diagnosis/Symptom/Finding; Medication/Procedure → resulted_in → Outcome)
+Q6. Which medication regimen was continued at discharge for management of the patient's condition?
+A6. (Medication.time = discharge)
+
+[Template 2 - Diagnostic Evidence Driving Medication Adjustment]
+Q1. What medications was the patient taking at the time of admission |chartdate or admission_id|?
+A1. (Medication.time = admission)
+Q2. While the patient was receiving those medications, were there any abnormal laboratory results, imaging findings, physical examination findings, or vital sign changes that prompted clinicians to adjust treatment?
+A2. (Lab_Test/Diagnostic_Imaging_Test/Vital_Sign/Physical_Exam → resulted_in → Medication change)
+Q3. Were the dose, frequency, or route modified in response to those abnormal findings?
+A3. (Medication.dosage change; Medication.frequency change; Medication.route change)
+Q4. After those medication adjustments were made, did the relevant clinical parameters improve?
+A4. (Medication → improves → Diagnosis/Symptom/Finding; Lab_Test/Vital_Sign trend improvement)
+Q5. At discharge, what medications and dosing regimens were prescribed following those adjustments?
+A5. (Medication.time = discharge; Medication.dosage/frequency)
+Q6. Were any monitoring instructions provided related to those medications?
+A6. (Medication → has_instruction → Instruction)
+
+[Template 3 - Discharge Medication Reconciliation and Allergy Safety Decisions]
+Q1. What medications were prescribed at discharge during admission |chartdate or admission_id|?
+A1. (Medication.time = discharge)
+Q2. At the next admission discharge, were any of those medications added, discontinued, or changed?
+A2. (Medication.time = discharge comparison; Medication.status changes)
+Q3. Were there any conditions or clinical findings that prompted clinicians to add those new medications?
+A3. (Medication → administered_for → Diagnosis/Symptom/Finding)
+Q4. What was the documented reasoning that explained the evolution of the medication regimen from one discharge to the next?
+A4. (clinical reasoning from notes linking cross-admission clinical changes to the medication reconciliation decisions; Allergy.status; Medication → causes → Event)
+Q5. Were the doses or frequencies of those medications modified to improve safety or adherence?
+A5. (Medication.dosage comparison; Medication.frequency comparison)
+Q6. At the final discharge, were any medication continuation or monitoring instructions provided?
+A6. (Medication → has_instruction → Instruction)
+
+[Template 4 - Medication Adherence, Outpatient Failure, and Readmission Risk]
+Q1. What medications was the patient discharged on during admission |chartdate or admission_id|?
+A1. (Medication.time = discharge)
+Q2. Before the next hospitalization, did the patient stop taking or inconsistently take any of those medications?
+A2. (Medication.status = non-adherence)
+Q3. Did that medication non-adherence precede worsening symptoms or acute clinical events?
+A3. (Medication.status = non-adherence; Medication → causes → Event/Diagnosis/Symptom/Finding)
+Q4. How did clinicians address the adherence issue during readmission?
+A4. (Medication.time; Medication → switched_to → Medication; clinical reasoning from notes linking non-adherence pattern to the revised treatment approach)
+Q5. After medication adherence was restored or treatment was adjusted, did the patient's clinical status improve?
+A5. (Medication → improves → Diagnosis/Symptom/Finding; Outcome.status)
+Q6. Were any adherence counseling or follow-up instructions provided at discharge to prevent recurrence?
+A6. (Medication → has_instruction → Instruction)
+
+[Template 5 - Inpatient Medication Adjustment and Discharge Treatment Planning]
+Q1. What medications was the patient taking on admission |chartdate or admission_id|?
+A1. (Medication.time = admission; Medication.assertion)
+Q2. During hospitalization, were there any changes to the dose, route, or frequency of those medications?
+A2. (Medication.dosage change; Medication.route change; Medication.frequency change)
+Q3. Were there any diagnostic findings or vital sign abnormalities that prompted clinicians to make those medication changes?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → resulted_in → Medication)
+Q4. After those medication adjustments were implemented, how did the patient clinically respond?
+A4. (Medication → improves/worsens → Diagnosis/Symptom/Finding; Medication → resulted_in → Outcome/Finding)
+Q5. Based on that response, what medications were ultimately prescribed at discharge?
+A5. (Medication.time = discharge)
+Q6. For the medications prescribed at discharge, what conditions were they intended to treat?
+A6. (Medication → administered_for → Diagnosis/Symptom/Finding)
+Q7. Were any discharge instructions given regarding those medications?
+A7. (Medication → has_instruction → Instruction)

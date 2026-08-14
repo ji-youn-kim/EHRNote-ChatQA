@@ -1,0 +1,65 @@
+Carefully read the patient's discharge summaries and each content question, reference correct answer, and model output.
+Your task is to score the model output on how correctly it answers the provided content question.
+
+IMPORTANT — How to treat the "Reference Correct Answer":
+The provided "Reference Correct Answer" is a REFERENCE ONLY. It may contain details that are not strictly asked by the question. The QUESTION itself defines what is essential, not the reference correct answer. The discharge summaries are the authoritative source for factual verification. A model answer that omits details present in the reference correct answer but NOT asked by the question should NOT be penalized for that omission.
+
+=== Scoring Rubric: Content Questions (0-2) ===
+
+Only a SERIOUSLY DANGEROUS hallucination forces Score 0. A seriously dangerous hallucination is one that would mislead clinical judgment, specifically:
+  (a) Factual contradiction — a claim that contradicts the discharge summaries.
+  (b) Cross-admission contamination — attributing findings from one admission to another.
+  (c) Load-bearing unsupported claim — an ungrounded clinical assertion that forms part of the actual answer to the question (e.g., an invented diagnosis, medication, dose, lab value, or clinical outcome).
+
+A minor, peripheral unsupported detail — one that is clinically plausible, does NOT contradict the discharge summaries, and is NOT part of the core answer to the question — is NOT a seriously dangerous hallucination. It lowers the score to 1 but does not force 0.
+
+Decision tree:
+
+Step 1: Is the output empty/off-topic, does it fail to address the question, or is the core clinical conclusion wrong?
+  -> Yes -> Score 0
+  -> No  -> Step 2
+
+Step 2: Does the output contain a SERIOUSLY DANGEROUS hallucination (a/b/c above)?
+  -> Yes -> Score 0
+  -> No  -> Step 3
+
+Step 3: Is the core answer correct and grounded, with all the details the QUESTION explicitly asks for, and no other flaws?
+  (Details present in the reference correct answer but NOT asked by the question are NOT required.)
+  -> Yes -> Score 2
+  -> No, it has a non-dangerous flaw -> Score 1
+     Non-dangerous flaws include: omitting an asked-for detail; including a minor peripheral unsupported detail (plausible, non-contradictory, and not part of the core answer); or including supported extras that blur the focus of the question.
+
+Score definitions:
+- Score 2 (Correct): All details the question asks for are present and consistent with the discharge summaries, with no seriously dangerous hallucination. It is acceptable to omit details that appear in the reference correct answer but are not asked by the question. Minor phrasing/ordering differences and clearly supplementary supported extras are acceptable.
+- Score 1 (Partially Correct): The core answer is correct and addresses what the question asks, but the output has a NON-dangerous flaw — it omits an asked-for detail, adds a minor peripheral unsupported detail that does not mislead clinical judgment, or includes supported extras that blur the focus of the question.
+- Score 0 (Incorrect): The output fails to address the question, is empty/off-topic, gets the core clinical conclusion wrong, OR contains a seriously dangerous hallucination (factual contradiction, cross-admission contamination, or a load-bearing unsupported claim).
+
+=== General Rules ===
+
+- The QUESTION defines what is essential. The "Reference Correct Answer" is a hint; it may contain details not asked by the question, which the model is free to omit without penalty.
+- The discharge summaries are the authoritative source for factual verification.
+- Only seriously dangerous hallucination (a/b/c above) forces Score 0. Minor, peripheral, non-contradictory unsupported details are penalized at Score 1, not 0.
+- Provide reasoning BEFORE the score for each question. This ensures careful deliberation.
+
+=== Output Format (Strict) ===
+
+For each content question (with key 1, 2, 3, ...), output one Reasoning line followed by one Score line. Replace the key with the actual question number, with NO curly braces. Do NOT write `Score{1}` — write `Score1`. The score must be a single integer 0, 1, or 2.
+
+Concrete example for three content questions (replace 1, 2, and 3 with the actual question keys):
+
+Reasoning1: The model correctly identifies the asked-for clinical findings and grounds them in the discharge summaries. No seriously dangerous hallucination. Includes one clearly supplementary supported detail that does not distract.
+Score1: 2
+
+Reasoning2: The core clinical conclusion is correct and grounded, but the model adds a minor, clinically plausible aside that is not stated in the discharge summaries and is not part of what the question asks. It does not contradict the notes and would not mislead clinical judgment, so it is a non-dangerous flaw rather than a forced 0.
+Score2: 1
+
+Reasoning3: The model includes a factual contradiction of the discharge summary regarding the patient's blood pressure trend. This is a seriously dangerous hallucination and forces 0.
+Score3: 0
+
+=== Inputs ===
+
+[Discharge Summaries]
+{discharge summaries}
+
+[Content Questions, Reference Correct Answers, and Model Outputs]
+{qas}

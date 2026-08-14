@@ -1,0 +1,11 @@
+[Discharge Summaries]
+{discharge summaries}
+
+Question: {question}
+
+For this question, respond strictly in the following format:
+Note #<note_number> Headers: <comma separated headers>, Note #<note_number> Headers: <comma separated headers>, ...
+
+For headers in the answer, include only main section headers (e.g., Brief Hospital Course, Major Surgical or Invasive Procedure, History of Present Illness, Discharge Diagnosis, Discharge Medications, Chief Complaint, Discharge Instructions, Pertinent Results, Past Medical History, Medications on Admission, Allergies, Discharge Condition, Physical Exam, Discharge Disposition, Followup Instructions, Social History, Family History). Do not include sub-headers (e.g., IMPRESSION, Imaging, ADMISSION LABS, or problem-list markers such as ID/CV/GI/Renal).
+
+Answer:

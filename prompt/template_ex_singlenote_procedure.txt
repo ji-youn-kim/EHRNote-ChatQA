@@ -1,0 +1,69 @@
+[Template 1 - Procedure Indication, Supporting Evidence, and Discharge Planning]
+Q1. Did the patient undergo any procedures during admission, and on what date or hospital day were they performed?
+A1. (Procedure.assertion; Procedure.time; Procedure.is_main; Procedure.status)
+Q2. What was the primary indication that led to the procedure?
+A2. (Procedure → administered_for → Diagnosis/Symptom/Finding; Diagnosis.status; Diagnosis.assertion)
+Q3. Were there any pre-procedural findings that supported the decision to perform the procedure, and were any abnormalities documented?
+A3. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → resulted_in → Procedure; Lab_Test.value; Lab_Test.abnormal_flag; Diagnostic_Imaging_Test.result; Vital_Sign.value)
+Q4. What was the documented clinical reasoning that connected those abnormalities to the decision to proceed with the intervention?
+A4. (clinical reasoning from notes linking pre-procedural findings to the procedure decision; Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q5. Were there any intraoperative or immediate post-procedural complications, and if so, how were they identified?
+A5. (Procedure → causes → Event/Diagnosis/Symptom/Finding; Lab_Test/Imaging/Exam/Vitals → reveals → Diagnosis/Symptom/Finding)
+Q6. What was the patient's clinical outcome by discharge related to the procedure?
+A6. (Procedure → resulted_in → Outcome/Finding; Outcome.status; Diagnosis/Symptom/Finding.status at discharge)
+Q7. Were any discharge instructions or follow-up plans provided that were specifically related to the procedure?
+A7. (Procedure → has_instruction → Instruction; time=discharge)
+
+[Template 2 - Emergent or Urgent Procedure Decision-Making]
+Q1. Were there any acute clinical changes or events during admission that led to an urgent or emergent procedure?
+A1. (Event → causes → Procedure; Diagnosis/Symptom/Finding → causes → Procedure; acute Vital_Sign/Lab_Test abnormality)
+Q2. Were any diagnostic findings documented that supported proceeding with the urgent intervention?
+A2. (Lab_Test/Imaging/Physical_Exam → resulted_in → Procedure; Lab_Test.abnormal_flag; Imaging.result)
+Q3. What procedure was performed, and when during the admission course?
+A3. (Procedure.assertion; Procedure.time; Procedure.is_main)
+Q4. Were there any intraoperative or immediate postoperative complications?
+A4. (Procedure → causes → Diagnosis/Symptom/Finding/Event; Vital_Sign changes; Lab_Test changes)
+Q5. How did the patient's clinical status change after the procedure?
+A5. (Procedure → resulted_in → Outcome/Finding; Vital_Sign.value; Lab_Test.value trend; Physical_Exam.finding changes)
+Q6. Was any monitoring, rehabilitation, or follow-up planned due to the urgency of the procedure?
+A6. (Procedure → has_instruction → Instruction; Activity.status; time=discharge)
+
+[Template 3 - Surgical Approach, Perioperative Care, and Recovery Trajectory]
+Q1. What surgical procedure was performed, and what were the operative approach or components?
+A1. (Procedure.assertion; Procedure.time; Procedure.is_main; Procedure.status)
+Q2. What condition was the surgery intended to address?
+A2. (Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q3. What perioperative management strategies were implemented?
+A3. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding; Medical_Device.status; Medication.route; Medication.time)
+Q4. Did the procedure result in any expected postoperative findings or outcomes?
+A4. (Procedure → resulted_in → Outcome/Finding; Outcome → after → Procedure)
+Q5. Did any postoperative complication occur, and what was done in response?
+A5. (Procedure → causes → Diagnosis/Symptom/Finding/Event; Medication/Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q6. How was the recovery assessed at discharge based on the response to complication management?
+A6. (Activity.status; Outcome.status; Diagnosis/Symptom/Finding.status at discharge; clinical reasoning linking complication management to discharge status)
+Q7. What were the patient's wound care, rehabilitation, or procedural precautions at discharge?
+A7. (Procedure → has_instruction → Instruction; Activity → has_instruction → Instruction)
+
+[Template 4 - Procedure-Related Complication and Management Escalation]
+Q1. Did the patient undergo a procedure during admission, and was there any sign that a complication had occurred afterward?
+A1. (Procedure.assertion, Procedure.time; Procedure → causes → Diagnosis/Symptom/Finding/Event; earliest time evidence)
+Q2. Was any diagnostic workup done to evaluate the complication, and what did it reveal?
+A2. (Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign → reveals → Diagnosis/Finding; Lab_Test.value, Lab_Test.abnormal_flag, Diagnostic_Imaging_Test.result)
+Q3. What was the initial treatment approach for the complication, and was it effective?
+A3. (Medication/Procedure → administered_for → Diagnosis/Symptom/Finding; Medication/Procedure → improves/worsens → Diagnosis/Symptom/Finding)
+Q4. If the initial approach was not fully effective, was the management escalated, and what clinical reasoning drove that decision?
+A4. (Procedure/Medication → switched_to → Procedure/Medication; clinical reasoning from notes linking inadequate response to the escalation decision)
+Q5. What was the final status of the complication at discharge, and were any additional follow-up steps recommended?
+A5. (Diagnosis/Symptom/Finding.status at discharge; Outcome.status; Procedure/Medication → has_instruction → Instruction)
+
+[Template 5 - Procedure Outcome, Functional Status Change, and Discharge Planning]
+Q1. What was the patient's functional or clinical status prior to the procedure that made intervention necessary?
+A1. (Diagnosis/Symptom/Finding.status pre-procedure; Physical_Exam.finding; Activity.status pre-admission)
+Q2. What procedure was ultimately performed, and what were the expected goals?
+A2. (Procedure.assertion, Procedure.is_main; Procedure → administered_for → Diagnosis/Symptom/Finding; Procedure → resulted_in → Outcome/Finding expected)
+Q3. How did objective measures such as labs, imaging, vitals, or exam change after the procedure?
+A3. (Lab_Test.value post-procedure; Vital_Sign.value; Physical_Exam.finding; Diagnostic_Imaging_Test.result post-procedure)
+Q4. What was the patient's functional and clinical status at discharge compared to admission?
+A4. (Outcome.status; Activity.status at discharge; Diagnosis/Symptom/Finding.status resolved/improved/persistent)
+Q5. What discharge disposition was chosen, and were any ongoing procedure-related instructions or follow-up given?
+A5. (Procedure → has_instruction → Instruction; Activity → has_instruction → Instruction; Outcome → after → Procedure; discharge disposition)

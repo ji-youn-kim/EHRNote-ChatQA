@@ -1,0 +1,261 @@
+You are provided with a patient's discharge summary. You are also provided with an entity category, attribute, relationship schema defined for tagging discharge summaries, along with multi-turn QA template examples regarding multiple pre-defined categories. The multi-turn QA templates are curated by medical experts (i.e., clinician, nurse).
+Carefully read the patient's discharge summary and generate a multi-turn QA that medical experts would realistically ask in real-world clinical practice when reviewing the discharge summary.
+Among the QA template categories mentioned below, generate multi-turn QA regarding {qa_template_category} category, by referencing and following the reasoning style demonstrated in the {qa_template_category} QA template examples below.
+
+You must generate:
+1. A sequence of medical expert-style multi-turn questions.
+2. All entities, attributes, and relationships between entities extracted from the discharge summaries required to answer each corresponding question,
+3. Source locations of the extracted entities, attributes, and relationships that compose the answer content. (Sufficient but minimal)
+4. The answer.
+
+Multi-turn Reasoning Dependency (CRITICAL):
+The QA sequence must simulate stepwise clinical reasoning with narrative coherence, similar to how clinicians progressively review charts.
+Rules:
+- Q1 may introduce entities directly from the discharge summaries.
+- Q2 and later questions must reference entities introduced in previous answers.
+- Later questions must not independently re-introduce entities that have already appeared in prior answers.
+This ensures thematic continuity across the reasoning chain.
+Example logic:
+A1 identifies Entity X
+Q2 refers to Entity X using a coreference expression (e.g., "the diagnosis", "the procedure")
+A2 concerns Entity X or a closely related entity
+
+Unresolvability Requirement:
+For each Q2+ question, verify that the question CANNOT be answered correctly by reading only the discharge summaries without knowing the prior answers. If a reader with no prior context could identify the correct answer by searching the notes for the entity referenced in the question, the question is insufficiently dependent on prior context. Revise it to increase referential ambiguity — the coreference expression must be genuinely ambiguous without prior context.
+For example, if the patient has only one procedure, "What was the outcome of that procedure?" is effectively self-resolving. In such cases, broaden the coreference ("What was the outcome of that intervention?") or restructure the chain so that the referenced entity has multiple plausible referents in the notes.
+
+Entity Introduction Rules
+- Q1 may name entities directly from the discharge summaries, as there is no prior answer to reference.
+- For Q2 and later questions, the question must not introduce new entity names from the discharge summaries. Entities for Q2 and later may only be referenced using coreference expressions that refer back to entities already introduced in a prior answer.
+- When referencing entities in Q2 and later questions, you must not include modifiers or details that reveal identity (e.g., type, location, mechanism).
+For example, instead of "What antithrombotic treatment was started", write "What treatment was started". Also, instead of "What ongoing antiplatelet regimen was prescribed", write "What ongoing regimen was prescribed".
+
+Coreference Expression Restrictions (STRICT):
+The coreference expression must be the most generic clinically natural term possible. Terms that reveal drug class, mechanism, anatomical category, or clinical subcategory are PROHIBITED because they narrow the referent and can break error propagation by allowing direct lookup in the notes.
+PROHIBITED coreference expressions (examples — not exhaustive):
+- "the antibiotic", "the antifungal", "the antihypertensive", "the anticoagulant", "the antiarrhythmic", "the analgesic", "the antiplatelet agent"
+- "the cardiac procedure", "the orthopedic procedure", "the endoscopic procedure", "the neurologic finding"
+- "the renal finding", "the hepatic finding", "the pulmonary imaging", "the cardiac imaging"
+- "the gram-positive organism", "the fungal infection"
+REQUIRED generic alternatives:
+- "the medication", "the treatment", "the regimen"
+- "the procedure", "the intervention", "the operation"
+- "the finding", "the result", "the abnormality"
+- "the condition", "the diagnosis", "the complication"
+- "the organism", "the infection"
+
+Entity Reuse Rules:
+For Q2 and all subsequent questions:
+1. The question must not contain entity names copied directly from the discharge summary.
+2. The question must refer to entities from the previous answer using coreference expressions, such as:
+- "the procedure", "the diagnosis", "the complication", "the finding", "the laboratory abnormality", "the imaging result", "the organism", "the treatment", "the intervention", "the outcome"
+3. For the coreference expressions, questions must not include descriptive modifiers that reveal the identity, category, mechanism, location, or clinical implication of the referenced entity. Questions must refer to entities without adding informative adjectives or phrases.
+Once an entity name appears in an earlier answer, the original name must not appear again in subsequent questions.
+
+Answer Continuity Constraint:
+For each answer Ai (i > 1):
+- The answer must concern the entity or clinical concept referenced in Qi.
+- The answer must be clinically coherent with the prior question context and advance the reasoning chain naturally.
+
+Question Naturalness Constraint (CRITICAL):
+Each question must sound like an open chart-review question that a clinician would actually ask while reading the notes for the first time. The asker must NOT already know the answer, and the question must NOT presuppose the existence, valence, or notability of what the answer will be. Questions that read like textbook prompts ("What critical finding was discovered...", "Given the complicated course...", "Despite the eventual procedure...") are PROHIBITED because they leak the answer and are not clinically realistic.
+
+This rule constrains how NEW information in the question is framed. The required coreference back to entities from prior answers (per the Multi-turn Reasoning Dependency, Entity Reuse, and Coreference Expression Restrictions rules above) still applies — the back-reference itself is fine; the leakage rule applies to the rest of the stem.
+
+Forbidden patterns:
+The problem is structural (presupposition), not lexical. Words like "critical", "major", "significant", "key", "notable" are clinically legitimate when used inside an open question (e.g., "Was there any significant change in his renal function?", "Was anything notable found on imaging?"). What is forbidden is asserting the existence or characterization of the answer as a fact in the stem itself. The two structural patterns to avoid:
+
+1. Embedding the answer category as an asserted fact in the stem (declarative presupposition). The stem states that the entity to be revealed already exists, instead of asking whether it exists or what was done in a given scope.
+   - e.g., "A new condition was identified during that admission. What intervention was performed for it?" — both clauses presuppose findings before the answer reveals them.
+   - e.g., "What was the specific challenge in managing his medications?" — presupposes that a challenge existed.
+   - e.g., "What critical finding was discovered during the evaluation?" — presupposes that a critical finding was discovered.
+   The fix is to convert the presupposing clause into a yes/no opener ("Was there any challenge in managing his medications?", "Was there any finding of concern on that evaluation?") or to a neutral scope question ("What did that evaluation show?").
+
+2. Editorial framing clauses that characterize the course or outcome before asking. A leading clause like "Given the complicated hospital course, ..." or "Despite the eventual procedure, ..." asserts that the course was complicated or that a procedure occurred before the answer reveals it. The fix is to drop the editorial clause: "What was the outcome of that hospital course?", "What happened after that procedure?".
+
+Required rewriting strategy:
+For each question that would otherwise presuppose the answer, convert it into either:
+(a) a YES/NO opener that asks whether the entity exists, optionally followed in the SAME turn or the NEXT turn by a specific follow-up question about its details, OR
+(b) a neutral wh-question that names the SCOPE of inquiry (the workup, the plan, the medication regimen, the disposition, what happened next) without evaluative adjectives and without asserting what the answer will be.
+
+The new entity introduced by the answer must still be unrecoverable from the question alone — i.e., the question may name the SCOPE (what was done, what was found, what happened next, how the patient was doing) but must not name or telegraph the ANSWER ENTITY itself.
+
+Paired BAD -> GOOD examples:
+
+  BAD:  "What critical finding was discovered during the evaluation?"
+  GOOD: "Was there any finding of concern discovered during that evaluation?"
+  GOOD: "What did the evaluation show?"
+
+  BAD:  "What was the specific challenge in managing his medications?"
+  GOOD: "Was there any challenge in managing his medication regimen?"
+  GOOD: "What was documented about his medication management at that point?"
+
+  BAD:  "A new condition was identified during that admission. What intervention was performed for it?"
+  GOOD: "Was a new condition identified during that admission?" (next turn:) "What intervention was performed for it?"
+  GOOD: "What was worked up during that admission, and what was done?"
+
+  BAD:  "Given the complicated hospital course, what was the outcome?"
+  GOOD: "What was the outcome of that hospital course?"
+
+  BAD:  "Despite the eventual procedure, what happened next?"
+  GOOD: "What happened after that procedure?"
+
+  BAD:  "What major clinical event occurred shortly thereafter, leading to escalation of care?"
+  GOOD: "What happened to the patient after that?"
+  GOOD: "Was there any clinical change after that? If so, what?"
+
+  BAD:  "Despite that improvement, what major clinical event occurred...?"
+  GOOD: "What happened after that improvement?"
+
+  BAD:  "What was the patient's overall functional outcome and discharge disposition at the end of that admission?"
+  GOOD: "How was the patient functionally at discharge, and where was he discharged to?"
+
+  BAD:  "What critical finding was discovered during the evaluation leading up to that intervention?"
+  GOOD: "What did the workup before that intervention show?"
+
+  BAD:  "Following stabilization of that episode, a new condition was identified..."
+  GOOD: "What happened after that episode was stabilized?"
+
+Note on yes/no openers:
+A yes/no opener is acceptable ONLY when the corresponding answer naturally begins with "Yes" + the full clinical details drawn from the source notes (e.g., "Yes — atrial flutter was identified, and an ablation was performed on..."). Do NOT use yes/no openers as a loophole to hide content; the answer must still convey the same clinical information that would have been conveyed under the BAD phrasing. If the answer cannot be expanded that way, use a neutral wh-question instead.
+
+Self-check before finalizing each question:
+1. Does the stem assert as fact something that the answer is supposed to reveal (e.g., "a new condition was identified", "the specific challenge in managing his medications", "the eventual procedure", "the critical finding that was discovered")? If yes, convert that clause into a yes/no opener or a neutral scope question.
+2. Does the stem contain a leading editorial framing clause that characterizes the course or outcome before asking (e.g., "Given the complicated hospital course, ...", "Despite the eventual procedure, ...")? If yes, drop the editorial clause.
+3. Could a clinician who has NOT yet read the relevant note section ask this question without already knowing what the answer will be? If no, rewrite until the answer would still be a genuine surprise to the asker.
+4. Does the question still satisfy the Multi-turn Reasoning Dependency, Entity Reuse, and Coreference Expression Restrictions rules above (i.e., it back-references prior answer entities using only generic coreference expressions, and the back-referenced entity is genuinely ambiguous without the prior turn)? If no, restore the back-reference.
+
+Template Diversity Rule:
+The provided templates are conceptual inspirations, not fixed question structures.
+When generating questions:
+- Do not copy templates directly.
+- Combine or adapt ideas from multiple templates when constructing the reasoning chain.
+- Adapt the reasoning chain based on the provided patient discharge summary content.
+Reference the QA template examples of {qa_template_category} when constructing questions.
+
+Question Generation Requirements:
+When generating questions,
+- Questions must reflect real clinical reasoning workflows, meaning questions medical experts actually ask when reviewing discharge summaries for patient care, handoff, or follow-up planning.
+- Each question must reference or build on entities or clinical concepts introduced in the previous answer.
+- Do not add descriptive modifiers that can reveal entity identity in later questions.
+- Do not add phrases such as "you identified", "you described", "from the prior answer". Instead, just assume that the prior answer context will be used to answer each question.
+- Avoid adding parentheses in the questions.
+- Questions must not introduce hypothetical or speculative clinical scenarios.
+- Questions must not be trivially answerable, and should require clinical details and medical experts to interpret, connect, or reason over clinical information.
+- Questions must not ask multiple things in a single question. Split them into separate questions.
+- Questions must be written in natural clinical language reflecting how medical experts actually phrase questions.
+- Each subsequent question in the multi-turn chain should logically follow prior questions in a way medical experts would naturally proceed during chart review.
+- You must reference the QA template examples of {qa_template_category}. Use them as seed to construct real-world questions that medical-experts would ask.
+
+Turn Count Guidance:
+Generate 5-7 content questions, calibrated to the patient's clinical complexity.
+Dependency quality takes absolute priority over turn quantity. Every question must maintain genuine clinical reasoning dependency on prior answers. Do not generate additional questions merely to increase turn count. A strong 5-turn chain with tight dependency is far better than a 7-turn chain where later turns are self-contained or only loosely connected.
+If you cannot construct a clinically natural, dependent question that maintains the reasoning chain, stop the chain. Do not generate unnatural questions that clinicians would not realistically ask.
+
+WHY/HOW Question Guidance:
+You are encouraged to include WHY and HOW questions at Q3 and later positions. These questions strengthen both clinical naturalness and error propagation because they require understanding clinical reasoning chains, which forces reliance on prior-turn context. Use phrasing such as:
+- "Because [referencing prior answer context], how was the management adjusted?"
+- "Given [referenced finding from prior answer], why was that approach chosen?"
+- "What clinical reasoning led to the change in [the treatment / the intervention]?"
+- "How did [those findings / that response] influence the subsequent management?"
+
+Answerable-from-notes constraint (CRITICAL): All WHY/HOW questions MUST be answerable from information explicitly stated or directly inferable from the discharge summaries combined with standard clinical knowledge to interpret those facts.
+
+Permitted reasoning types:
+- Connecting two documented events in a causal or temporal sequence (e.g., a documented finding followed by a documented clinical decision)
+- Interpreting documented lab values, imaging results, or exam findings using standard clinical knowledge
+- Explaining a documented clinical decision using the rationale stated or clearly implied in the notes
+- Linking documented information across different sections of the discharge summary for the same patient
+
+PROHIBITED reasoning types (questions requiring these are NOT allowed):
+- Pathophysiological mechanisms not described in the notes (e.g., "Why does Drug X cause side effect Y at the molecular level?")
+- Clinical guideline reasoning not cited or implied in the notes (e.g., "Why is Drug X preferred over Drug Y per guidelines?")
+- Pharmacological mechanisms of action (e.g., "How does this medication work?")
+- Counterfactual scenarios (e.g., "What would have happened if treatment X had not been given?")
+- Epidemiological or population-level statistics (e.g., "Why is this condition more common in population X?")
+- Comparison with alternative treatments not mentioned in the notes (e.g., "Why was ticagrelor chosen over prasugrel?" when the notes do not discuss this choice)
+
+The output format must be as follows:
+Q1: {medical expert question regarding the patient's discharge summaries}
+A1:
+[Entities, Attributes, Relationships]
+{Entity1} - attribute_name: attribute, attribute_name: attribute
+{Entity2} - attribute_name: attribute, attribute_name: attribute
+{Entity1} -> relationship_name -> {Entity2}
+{Entity3} - attribute_name: attribute, attribute_name: attribute
+{Entity2} -> relationship_name -> {Entity3}
+...
+[Source Location]
+{Note #x}{Header Name}
+{corresponding text-span1}
+{corresponding text-span2}
+{Note #x}{Header Name}
+{corresponding text-span1}
+{corresponding text-span2}
+...
+[Answer]
+{answer_text}
+Repeat for Q2, Q3, etc.
+
+Source Location Rules:
+- You must add all headers that are required for answering the question, but you must add only minimal headers that are necessarily required to answer the question. For example, if the answer content appears in both brief hospital course and major surgical or invasive procedure, and the content in major surgical or invasive procedure is included in brief hospital course, you must only include brief hospital course as source location.
+- For the header names, you must write the main section header names (e.g., Brief Hospital Course, Major Surgical or Invasive Procedure, History of Present Illness, Discharge Diagnosis, Discharge Medications, Chief Complaint, Discharge Instructions, Pertinent Results, Past Medical History, Medications on Admission, Allergies, Discharge Condition, Physical Exam), instead of the sub-header names (e.g., Microbiology, Imaging within the Pertinent Result header). If the context is included in the sub-header, you must write the main header name instead of the sub-header name, along with its corresponding context.
+
+[Entity Category, Attribute, Relationship Schema]
+1. Diagnosis – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+2. Finding – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+3. Symptom – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+4. Procedure – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+5. Outcome – status, assertion, time(dates, times, durations, frequencies)
+6. Vital_Sign – status, value, assertion, time(dates, times, durations, frequencies)
+7. Physical_Exam – status, finding, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+8. Lab_Test – value, abnormal_flag, status, assertion, time(dates, times, durations, frequencies)
+9. Diagnostic_Imaging_Test – status, result, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+10. Specimen – source, assertion, time(dates, times, durations, frequencies)
+11. Microbiology_Test - organism_growth, result, assertion, time(dates, times, durations, frequencies)
+12. Microbiology_Organism - growth, assertion, time(dates, times, durations, frequencies)
+13. Microbiology_Antibiotics - dilution, sensitivity, assertion, time(dates, times, durations, frequencies)
+14. Activity – status, assertion, time(dates, times, durations, frequencies)
+15. Medication – strength, dosage, form_description, form, route, instruction, disp, refills, assertion, time(dates, times, durations, frequencies)
+16. Event – status, assertion, time(dates, times, durations, frequencies)
+17. Allergy – status, assertion, time(dates, times, durations, frequencies)
+18. Medical_Device - status, assertion, time(dates, times, durations, frequencies)
+19. Instruction - instruction_text, assertion, time(dates, times, durations, frequencies)
+is_main attribute is either true or false. If the Diagnosis/Symptom/Finding is the main Diagnosis/Symptom/Finding for the patient during the current admission (e.g., chief complaint, discharge diagnosis(primary), main Diagnosis/Symptom/Finding according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false (e.g., discharge diagnosis(secondary), not main Diagnosis/Symptom/Finding according to context).
+If the Procedure is the main Procedure for the patient during the current admission (e.g., major surgical or invasive procedure, main Procedure according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false.
+abnormal_flag attribute in Lab_Test, is either normal or abnormal.
+
+1. Procedure/Medication -> improves -> Diagnosis/Symptom/Finding
+2. Procedure/Medication -> worsens -> Diagnosis/Symptom/Finding
+3. Procedure/Medication -> causes -> Diagnosis/Symptom/Finding
+4. Procedure/Medication -> administered_for -> Diagnosis/Symptom/Finding
+5. Procedure/Medication -> reveals -> Diagnosis/Symptom/Finding
+6. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> reveals -> Diagnosis/Finding
+7. Specimen -> has_test -> Microbiology_Test/Lab_Test
+8. Microbiology_Test -> detected -> Microbiology_Organism
+9. Microbiology_Organism -> tested_against -> Microbiology_Antibiotics
+10. Microbiology_Organism -> reveals -> Diagnosis/Finding
+11. Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding
+12. Diagnosis/Symptom/Finding -> causes -> Event
+13. Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding/Activity
+14. Outcome/Finding -> after -> Diagnosis/Symptom/Finding
+15. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> resulted_in -> Procedure/Medication
+16. Procedure/Medication -> causes -> Procedure/Medication
+17. Procedure/Medication -> causes -> Event
+18. Procedure/Medication -> switched_to -> Procedure/Medication
+19. Procedure/Medication -> resulted_in -> Outcome/Finding
+20. Outcome/Finding -> after -> Procedure/Medication
+21. Event -> causes -> Diagnosis/Symptom/Finding
+22. Event -> causes -> Procedure/Medication
+23. (any category) -> has_instruction -> Instruction
+The difference between "causes" and "resulted_in" in "Procedure/Medication -> causes -> Diagnosis/Symptom/Finding" and "Procedure/Medication -> resulted_in -> Outcome/Finding" is that "causes" is used when a procedure or medication produces an adverse effect or complication, while "resulted_in" is used when a procedure or medication leads to a desired or expected state or improvement (positive or neutral).
+Similarly, the difference between "causes" and "resulted_in" in "Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding" and "Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding" is that "causes" is used when a diagnosis, symptom, or finding produces an adverse effect or complication, while "resulted_in" is used when a diagnosis, symptom, or finding leads to a desired or expected state or improvement (positive or neutral).
+
+[Multi-turn QA Templates - {qa_template_category}]
+{qa_template_examples}
+
+[Multi-turn QA Templates - Other Categories]
+{qa_template_examples_other}
+
+[Patient's Discharge Summary]
+{discharge_summaries}

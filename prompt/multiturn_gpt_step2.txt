@@ -1,0 +1,317 @@
+You are provided with a patient's discharge summaries. You are also provided with an entity category, attribute, relationship schema defined for tagging discharge summaries, along with a multi-turn QA pair that consists of 1) medical expert multi-turn questions regarding the patient's discharge summaries, 2) the entities, attributes, and relationships between entities extracted from the discharge summaries required to answer each corresponding question, 3) the source location of the extracted entities, attributes, and relationships that compose the answer content, and 4) the correct answer. Carefully read the provided patient's discharge summaries, and the multi-turn questions, answer evidence, answer source, and correct answer. For each multi-turn question, generate specific guidance on content that could support plausible incorrect answer choices.
+Do not generate multiple-choice options.
+Do not generate final distractor answer choices.
+Instead, generate specific distractor-design explanations describing how plausible incorrect answers could be constructed based on the patient's discharge summaries, clinical knowledge, and multi-turn context.
+
+Primary Directive — Mixed Distractor Strategy:
+Distractors must require genuine clinical reasoning to eliminate, not just text verification against the notes. Use a mix of the following two sources:
+
+Source A — Note-Grounded With Clinical Reasoning Requirement (approximately 60% of distractors): Draw content from the patient's discharge summaries, but combine note-grounded details in ways that require clinical knowledge to reject. Examples:
+- Plausible but clinically incorrect causal chains constructed from entities in the notes
+- Wrong drug-indication pairings, wrong organism-antibiotic pairings, or wrong diagnosis-treatment pairings using entities that appear in the notes
+- Clinically implausible complication pathways using conditions and procedures from the notes
+- Misattributed temporal sequences where the individual events are all documented but the ordering, causal direction, or admission assignment is wrong
+The key test: a model should NOT be able to eliminate the distractor simply by searching the notes for the presence or absence of a named entity. The distractor's entities should all appear in the notes; what makes it wrong is the clinical relationship between them, or the admission context in which they appear.
+
+Source B — Clinically Plausible External (approximately 40% of distractors): Introduce entities, diagnoses, treatments, findings, management approaches, or clinical pathways that are NOT present anywhere in the patient's notes but are clinically plausible given the patient's conditions. These should represent:
+- Genuine differential diagnoses, alternative etiologies, or competing interpretations of the patient's presentation
+- Alternative treatments, antibiotics, or interventions from the same drug class or guideline pathway that were not used
+- Management actions, monitoring strategies, or follow-up services that are standard of care for the patient's conditions but were not arranged or documented
+- Complications, findings, or clinical outcomes expected in similar clinical situations but not documented in this patient
+- Alternative discharge dispositions, follow-up plans, or rehabilitation modalities appropriate for the patient's condition
+
+Important constraint for Source B distractors: The external content must not contradict any explicit statement in the notes. It must be absent from the notes, not denied by them. This forces the model to rely on parametric clinical knowledge to reject it, not note-reading.
+
+Key principle: A model should NOT be able to eliminate a distractor simply by searching the notes for the presence or absence of a specific entity. Eliminating distractors should require knowing whether a clinical relationship is medically valid, whether a treatment is appropriate for a given condition, whether an organism is likely in a given infection context, or whether a finding is expected in a given clinical context.
+
+Shared-Entity Distractor Preference:
+When generating distractor directions, prioritize designs where the distractor references the SAME key entities as the correct answer but applies a different clinical relationship, interpretation, causal direction, temporal assignment, or admission context. Distractor directions that substitute entirely different entities are less effective because they allow elimination by entity-presence checking. For each Q2+ question, at least 3 of the 6 distractor type directions should describe distractors that share the primary entity with the correct answer.
+
+Minimal-Pair Construction Principle:
+At least 2 of the distractor directions you provide for each question must describe a "minimal-pair" distractor — one that shares the vast majority of content, structure, and wording with the correct answer but differs in exactly ONE specific clinical detail. The single differing detail should be:
+- A single entity substitution (e.g., one organism name, one drug name, one diagnosis name)
+- A single attribute change (e.g., one dosage value, one lab value, one date, one laterality, one severity grade)
+- A single relationship reversal (e.g., cause vs. effect, temporal ordering of two events)
+- A single admission reassignment (for multi-admission cases)
+
+The goal is that a reader comparing the minimal-pair distractor to the correct answer side-by-side would need to identify precisely which ONE detail is wrong. Distractors that differ from the correct answer in multiple independent dimensions simultaneously are less effective because models can detect the "odd one out" by surface pattern matching.
+
+For Types 1, 4, 5, and 6 especially, default to minimal-pair construction unless the question's structure makes it impossible (e.g., broad multi-dimensional summary questions). When describing the distractor direction, explicitly state:
+(a) what content is SHARED with the correct answer, and
+(b) what SINGLE detail is changed and why it is clinically plausible.
+
+Important — the single changed detail must be VERIFIABLY wrong from the discharge summaries or from established clinical knowledge. Do not change a detail to a value that is merely undocumented — change it to a value that contradicts documented information or is clinically implausible given the documented context.
+
+Core Task Requirements:
+For each question in the multi-turn QA chain:
+1. Identify the referenced entity or concept (applies to Q2 and later questions)
+For Q2 and later questions, identify:
+- which prior entity, concept, interpretation, or clinical finding the current question references
+- what plausible alternative interpretations of the referenced entity or concept could lead to a coherent but incorrect answer to the current question
+For Q1, there is no prior answer to reference, so proceed directly to step 2.
+
+2. For Q2 and later questions only: Referential Ambiguity Analysis
+Explicitly identify what the pronoun or referent could alternatively resolve to if the model lacks prior context. For example:
+- If Q2 asks "What condition did those findings support?" and the patient has multiple documented abnormalities (stroke signs, syncope signs, metabolic abnormalities), identify each possible referent.
+- Design at least one distractor that represents the correct answer for an alternative pronoun resolution (the clinically correct treatment or finding that matches a different possible referent).
+
+Process:
+a) Identify the referential expression in the question (e.g., "that diagnosis", "the treatment", "those abnormalities", "those episodes", "those medications", "that infection").
+b) Identify the correct referent from the prior answer.
+c) Identify 1-2 alternative referents that are also plausible given the discharge summaries (other documented conditions, symptoms, medications, or findings that the pronoun could resolve to in the absence of prior context).
+d) For each alternative referent, describe the distractor: the clinically correct answer to the current question IF the pronoun resolved to that alternative referent.
+
+Note for questions without explicit referential pronouns: If the current question does not use a referential pronoun but still builds on prior context (e.g., "What was the discharge disposition?" following a question about clinical status), identify what alternative prior answers would lead to a different current answer, and design distractor directions accordingly.
+
+3. For Q2 and later questions only: Cross-Turn Error Path Analysis
+Identify the 2 most clinically plausible incorrect answers from Q(n-1). For EACH, design a distractor at Q(n) that represents the natural clinical consequence if that prior wrong answer were true. Both error-path distractors must be carried forward as high-priority distractor directions into Step 3.
+
+This creates "error-consistent paths": a model that committed a specific error at Q(n-1) encounters a tempting wrong answer at Q(n) that is coherent with its prior error.
+
+For each Q(n) where n >= 2, provide:
+- Prior error path 1: [specific wrong answer direction from Q(n-1)]
+  Trap distractor: [what a model would answer at Q(n) if it believed that wrong answer]
+  Clinical reasoning: Why this downstream answer naturally follows from the prior error
+- Prior error path 2: [specific wrong answer direction from Q(n-1)]
+  Trap distractor: [what a model would answer at Q(n) if it believed that wrong answer]
+  Clinical reasoning: Why this downstream answer naturally follows from the prior error
+
+If only 1 plausible prior error exists (e.g., Q1 answer is unambiguous), explicitly note this and provide 1 error-path distractor.
+
+For multi-admission summary questions (where Q1 describes patterns across multiple admissions), the error path should target the most clinically consequential single-admission error.
+
+Note: Error-path design is an additional constraint that applies on top of the 6 distractor types. Any distractor type can be used to construct an error-path trap.
+
+4. Generate distractor-design guidance
+For each distractor type listed below, describe how a plausible incorrect answer could be constructed using:
+- Note-grounded details combined in ways requiring clinical knowledge to reject (Source A)
+- Clinically plausible alternatives not in the notes (Source B)
+- The multi-turn QA context, including referential ambiguity and cross-turn error paths
+
+Distractor Coherence Requirement:
+The QA chain is structured so that each question references entities or clinical concepts introduced in the prior answer.
+Incorrect answer choices should reflect plausible alternative interpretations of the referenced entity or concept, using a mix of note-grounded (Source A) and clinically-plausible-external (Source B) content as described in the Primary Directive.
+
+Distractor Design Requirements:
+Your distractor-design explanations must describe how plausible incorrect answers could be constructed. These incorrect answers should be:
+- clinically plausible
+- contextually appropriate
+- difficult for clinical LLMs to distinguish from the correct answer
+- credible enough that a medical expert reading quickly might consider them possible
+- free of obvious errors, implausible scenarios, or giveaway wording
+- NOT eliminable by simple text-matching against the notes (this is critical)
+
+Types of Effective Distractors:
+For each type below, provide multiple specific distinct distractor directions grounded in the case. For each direction, explicitly state whether it is Source A (note-grounded with clinical reasoning requirement) or Source B (clinically plausible external).
+
+Type 2 vs Type 3 distinction: Type 2 proposes a competing explanation or interpretation — what the diagnosis is, what caused it, what the condition is, or what the drug class is for. Type 3 proposes a competing action — what was done about it, what could have been ordered, what agent was used to achieve the same goal. For medication category specifically: Type 2 would propose an alternative drug class or therapeutic strategy based on a competing interpretation of the clinical indication (e.g., "long-term warfarin for a suspected hypercoagulable state" vs. Apixaban for AF — competing interpretation of WHY anticoagulation is needed). Type 3 would propose a different agent within the same class already identified as appropriate (e.g., "rivaroxaban instead of Apixaban for the same AF indication" — competing action within an accepted clinical strategy).
+
+1) Note-grounded entity substitution with clinical reasoning requirement (Source A): Replace the correct entity, or one or more of its attributes (timing, dosage, laterality, severity, site, frequency, duration), with a related entity or attribute value drawn from the notes. The substitution must require clinical knowledge to reject — the substitute entity or attribute value must appear somewhere in the notes; what makes it wrong is the clinical relationship to the question's focus, not entity absence.
+Prefer single-attribute substitution (changing only ONE entity or ONE attribute value) over multi-attribute substitution unless a multi-attribute change is the only way to produce a clinically plausible distractor. When describing a Type 1 distractor direction, clearly state whether the substitution is single-attribute or multi-attribute and why.
+Numerical precision priority: When the correct answer contains specific numerical values (lab results, vital signs, medication dosages, dates, durations, frequencies, measurement values, staging codes), at least one Type 1 distractor direction should describe substituting a numerically close but clinically distinct value from elsewhere in the notes. Examples: a creatinine value from a different lab draw or different admission, a dosage for the same drug at a different time point, a date from a different admission or clinical event, a lab value from a different specimen or test, a staging component from a related but different assessment. The numerical substitution should be close enough that it requires knowing the exact documented value to reject — not an order-of-magnitude difference.
+How this applies across categories:
+- For diagnosis/clinical_assessment questions: substitute a different diagnosis, finding, or assessment result from the notes
+- For medication questions: substitute a different drug from the patient's medication list that has a different clinical indication
+- For microbiology questions: substitute a different organism, specimen source, or susceptibility result from the notes
+- For procedure questions: substitute a different procedure documented in the notes
+- For symptom questions: substitute a different symptom or trigger from the patient's history
+- For disch_plan questions: substitute a different discharge destination, service, or follow-up from the notes
+- For clinical_outcome questions: substitute a different outcome status, resolved problem, or functional level from the notes
+
+2) Clinically plausible alternative approach, standard-of-care variant, or parallel pathway (Source B): Propose an alternative interpretation, diagnosis, etiology, or approach that is NOT in the notes but is clinically plausible given the patient's presentation. This type represents a competing EXPLANATION for the clinical picture — what the diagnosis is, what caused it, what the condition is, or what the drug class strategy is for.
+How this applies across categories:
+- For diagnosis/clinical_assessment: alternative diagnosis or differential for the documented presentation
+- For medication: alternative drug class or alternative clinical interpretation of why the anticoagulant, antihypertensive, or antibiotic strategy is needed — not just an alternative agent within the same class (see Type 3)
+- For microbiology: alternative organism commonly seen in this infection type, or alternative infection classification
+- For procedure: alternative surgical or diagnostic approach
+- For symptom: alternative etiology, trigger, or precipitating mechanism
+- For disch_plan: alternative post-discharge care model, referral pathway, or care coordination approach (e.g., alternative level of care, different specialty managing the post-discharge course)
+- For clinical_outcome: alternative outcome trajectory plausible for the documented conditions (e.g., alternative functional recovery trajectory or alternative resolution pathway for the primary problem)
+
+3) Plausible-but-absent management action, intervention, or monitoring strategy (Source B): Propose an action, order, intervention, or arrangement that is NOT documented but is clinically standard or guideline-appropriate for the patient's conditions. This type represents a competing ACTION — what was done about it, what could have been ordered, what agent was used to achieve the same goal.
+Important — question-type dependency: Type 3 is most naturally applicable to questions that ask what was DONE, ORDERED, ARRANGED, or CHOSEN (e.g., "What treatment was started?", "What follow-up was arranged?", "Which antibiotic was selected?"). For questions that ask what clinical finding, diagnosis, outcome, or symptom WAS PRESENT or WAS FOUND (e.g., "What abnormal findings were identified?", "What was the discharge status?", "What symptom occurred?"), skip Type 3 and provide an additional Type 1, Type 4, or Type 5 distractor instead. Do not force a Type 3 distractor onto non-action questions.
+How this applies across categories:
+- For medication: alternative drug from same class that was not prescribed, or alternative dosing schedule for the identified drug
+- For microbiology: alternative antibiotic spectrum or empiric coverage that was not chosen, or alternative stewardship approach
+- For procedure: alternative operative approach or technique that was not performed
+- For diagnosis/clinical_assessment: alternative imaging modality or diagnostic test that was not ordered, presented as a competing answer to what workup was completed
+- For disch_plan: alternative outpatient service, rehabilitation modality, or follow-up arrangement not documented
+- For symptom: alternative trigger management approach, activity restriction, or lifestyle modification not documented
+- For clinical_outcome: alternative post-discharge monitoring plan or readmission prevention strategy not documented
+
+4) Clinical relationship misattribution: causal, temporal, associative, or cross-admission (Source A or B): Construct a distractor that misassigns a clinical relationship — either reversing a causal direction, misattributing an association, displacing a temporal sequence, or confusing events across admissions — where rejecting the misattribution requires knowing the typical clinical course or the logical structure of the case.
+How this applies across categories:
+- For diagnosis: attribute a diagnosis to the wrong etiology or reverse the cause-effect chain between comorbidities
+- For medication: attribute a drug to the wrong indication where both indications are plausible given the patient's conditions
+- For microbiology: misattribute an organism to the wrong specimen source or infection site, or misassign an antibiotic sensitivity
+- For procedure: attribute a procedure to the wrong indication or misplace it in the temporal sequence of care
+- For symptom: misattribute a symptom to the wrong trigger, reverse the temporal relationship between symptom and intervention, or confuse symptoms from different admissions
+- For disch_plan: misattribute a discharge destination or functional status to the wrong clinical reason or wrong admission
+- For clinical_outcome: misattribute an outcome to the wrong clinical problem or intervention
+- For clinical_assessment: misattribute a clinical finding to the wrong underlying condition
+
+5) Note-grounded detail with one external wrong element (Source A+B hybrid): Combine several correct clinical details from the notes with one incorrect element drawn from general medical knowledge. The correct elements make the distractor credible; the incorrect element requires clinical knowledge to identify. The wrong element must not contradict any explicit statement in the notes.
+Numerical detail variant: When the correct answer includes numerical clinical data, one Type 5 direction should describe keeping all non-numerical content identical to the correct answer and changing only the numerical value to a clinically plausible alternative. This includes: a lab value within an adjacent reference range category, a dosage that exists for the same drug but for a different indication, a date shifted by one admission or clinical event, a measurement value from a similar but different anatomical site. This creates a distractor where the clinical reasoning is correct but the precise quantitative detail is wrong.
+How this applies across categories:
+- For diagnosis: correct diagnosis name and presentation with wrong severity, stage, or associated finding
+- For medication: correct drug and route with wrong dosage, frequency, or duration
+- For microbiology: correct organism identification with wrong susceptibility pattern or wrong gram stain characteristic
+- For procedure: correct procedure description with wrong complication, wrong approach detail, or wrong laterality rationale
+- For symptom: correct symptom description with wrong associated sign, wrong temporal pattern, or wrong precipitant
+- For disch_plan: correct discharge destination with wrong level of services or wrong reason for that level of care
+- For clinical_outcome: correct outcome status with wrong clinical attribution or wrong timeline
+- For clinical_assessment: correct assessment findings with wrong clinical interpretation or wrong associated condition
+
+6) Cross-admission temporal displacement (Source A): For patients with multiple admissions, attribute a correct clinical fact to the wrong admission. The entities, relationships, and clinical content are all present in the notes; what makes the distractor wrong is that the detail belongs to a different admission than the one the question asks about.
+How this applies across categories:
+- Attributing the discharge destination from one admission to a different admission
+- Attributing the medication hold reason from one hospitalization to a different one
+- Attributing the complication that occurred postoperatively in one admission to a different surgical admission
+- Attributing a specific organism or culture result to the wrong admission
+This type is particularly important for multi-admission summary questions where models can construct plausible answers by assigning correct facts to incorrect admission positions.
+Important — applicability condition: Type 6 applies only when (a) the patient's discharge summaries document 2 or more distinct admissions AND (b) the current question references clinical facts that could plausibly be assigned to different admissions. For single-admission patients or questions with unambiguous temporal context, mark Type 6 as not applicable and provide an additional Type 1, Type 4, or Type 5 distractor instead.
+
+Distractor Construction Guidance:
+For each distractor type, write:
+1. Source: State whether this is Source A (note-grounded with clinical reasoning requirement), Source B (clinically plausible external), or Source A+B hybrid.
+2. Explanation: A concise, specific description of how an incorrect answer choice could be constructed using that distractor type.
+3. Reasoning: A brief justification for why this distractor is plausible and why it cannot be eliminated by text matching alone. This must cite:
+- For Source A distractors: the specific note content that grounds the distractor and what clinical knowledge is needed to reject it.
+- For Source B distractors: the clinical basis and confirmation that this content does not contradict any explicit note statement.
+- For error-path distractors: what prior wrong answer this follows from and why the downstream reasoning is clinically coherent.
+4. Minimal-pair label: If this direction is a minimal-pair distractor (differs from correct answer in exactly one clinical detail), label it: "[Minimal-pair: differs only in {specific detail}]". If it differs in multiple dimensions, label it: "[Multi-difference]".
+Do not write generic distractor advice. Make each explanation and reasoning specific to the content of the provided patient's discharge summaries.
+
+Output Format:
+For each question, produce the following output format exactly:
+Q1: {medical expert question}
+- Effective Distractor Type 1: Note-grounded entity substitution with clinical reasoning requirement (Source A)
+Explanation: {specific description of how to construct the distractor}
+Reasoning: {why this distractor is plausible, citing note content and clinical knowledge required}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+- Effective Distractor Type 2: Clinically plausible alternative approach, standard-of-care variant, or parallel pathway (Source B)
+Explanation: {specific description of how to construct the distractor}
+Reasoning: {why this distractor is plausible, citing clinical basis and confirming no note contradiction}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+- Effective Distractor Type 3: Plausible-but-absent management action, intervention, or monitoring strategy (Source B)
+Explanation: {specific description of how to construct the distractor. If the question asks what was FOUND/PRESENT rather than what was DONE, write "Not applicable for this question type — substituting additional Type [1/4/5] direction:" followed by the substitute distractor direction.}
+Reasoning: {why this distractor is plausible, citing clinical basis}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+- Effective Distractor Type 4: Clinical relationship misattribution: causal, temporal, associative, or cross-admission (Source A or B)
+Explanation: {specific description of how to construct the distractor}
+Reasoning: {why this distractor is plausible, citing note content or clinical basis}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+- Effective Distractor Type 5: Note-grounded detail with one external wrong element (Source A+B hybrid)
+Explanation: {specific description of how to construct the distractor}
+Reasoning: {which elements are correct from the notes and what external medical knowledge is needed to identify the wrong element}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+- Effective Distractor Type 6: Cross-admission temporal displacement (Source A)
+Explanation: {specific description of how to construct the distractor by assigning a correct clinical fact to the wrong admission, or 'Not applicable: single admission or unambiguous temporal context — substituting additional Type [1/4/5] direction:' followed by the substitute distractor direction}
+Reasoning: {which admission the fact belongs to and why a model might plausibly assign it to the wrong one; or brief explanation if not applicable}
+Minimal-pair label: {[Minimal-pair: differs only in {detail}] or [Multi-difference]}
+
+Minimal-pair validation: After generating all 6 distractor directions, verify that at least 2 are labeled [Minimal-pair]. If fewer than 2 are minimal-pair, revise one of the [Multi-difference] distractors to a minimal-pair version by reducing it to a single differing dimension.
+
+Prior-Context Dependency Validation (Q2+ only): After generating all distractor directions, verify: Would a model reading only the current question, the discharge summaries, and the eventual answer choices (without any prior-turn context) be able to identify the correct answer? If all distractor directions target entities or facts clearly distinguishable from the correct answer using only the discharge summaries, the directions are insufficient. Ensure that at least 2 distractor directions describe answers that would be correct IF the question's referent resolved differently — i.e., they are correct answers to plausible alternative interpretations of what the question is asking about.
+
+Q2: {medical expert question}
+- Referential Ambiguity Analysis:
+  Referential expression: {the pronoun or anaphora in the question, or the implicit prior-context dependency}
+  Correct referent: {from prior answer}
+  Alternative referent 1: {plausible alternative from notes}
+  Alternative referent 2: {plausible alternative from notes, if applicable}
+  Distractor direction for alternative referent 1: {correct answer if pronoun resolved to this referent}
+  Distractor direction for alternative referent 2: {correct answer if pronoun resolved to this referent, if applicable}
+- Cross-Turn Error Path Analysis:
+  Prior error path 1: {specific wrong answer direction from Q1}
+  Trap distractor: {what a model would answer if it believed this wrong Q1 answer}
+  Clinical reasoning: {why this follows from the prior error}
+  Prior error path 2: {specific wrong answer direction from Q1}
+  Trap distractor: {what a model would answer if it believed this wrong Q1 answer}
+  Clinical reasoning: {why this follows from the prior error}
+- Effective Distractor Type 1: Note-grounded entity substitution with clinical reasoning requirement (Source A)
+Explanation: {specific description}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+- Effective Distractor Type 2: Clinically plausible alternative approach, standard-of-care variant, or parallel pathway (Source B)
+Explanation: {specific description}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+- Effective Distractor Type 3: Plausible-but-absent management action, intervention, or monitoring strategy (Source B)
+Explanation: {specific description, or note non-applicability and provide substitute direction}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+- Effective Distractor Type 4: Clinical relationship misattribution: causal, temporal, associative, or cross-admission (Source A or B)
+Explanation: {specific description}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+- Effective Distractor Type 5: Note-grounded detail with one external wrong element (Source A+B hybrid)
+Explanation: {specific description}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+- Effective Distractor Type 6: Cross-admission temporal displacement (Source A)
+Explanation: {specific description, or note non-applicability and provide substitute direction}
+Reasoning: {specific justification}
+Minimal-pair label: {label}
+
+Minimal-pair validation: {verify at least 2 are [Minimal-pair]; if not, revise}
+
+Prior-Context Dependency Validation: {verify at least 2 distractor directions would be correct answers under alternative referent resolutions; if not, revise}
+
+Repeat for Q3, Q4, etc. (all Q2+ questions must include the Referential Ambiguity Analysis, Cross-Turn Error Path Analysis, and Prior-Context Dependency Validation sections)
+
+[Entity Category, Attribute, Relationship Schema]
+1. Diagnosis – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+2. Finding – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+3. Symptom – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+4. Procedure – is_main, status, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+5. Outcome – status, assertion, time(dates, times, durations, frequencies)
+6. Vital_Sign – status, value, assertion, time(dates, times, durations, frequencies)
+7. Physical_Exam – status, finding, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+8. Lab_Test – value, abnormal_flag, status, assertion, time(dates, times, durations, frequencies)
+9. Diagnostic_Imaging_Test – status, result, finding_site, laterality, assertion, time(dates, times, durations, frequencies)
+10. Specimen – source, assertion, time(dates, times, durations, frequencies)
+11. Microbiology_Test - organism_growth, result, assertion, time(dates, times, durations, frequencies)
+12. Microbiology_Organism - growth, assertion, time(dates, times, durations, frequencies)
+13. Microbiology_Antibiotics - dilution, sensitivity, assertion, time(dates, times, durations, frequencies)
+14. Activity – status, assertion, time(dates, times, durations, frequencies)
+15. Medication – strength, dosage, form_description, form, route, instruction, disp, refills, assertion, time(dates, times, durations, frequencies)
+16. Event – status, assertion, time(dates, times, durations, frequencies)
+17. Allergy – status, assertion, time(dates, times, durations, frequencies)
+18. Medical_Device - status, assertion, time(dates, times, durations, frequencies)
+19. Instruction - instruction_text, assertion, time(dates, times, durations, frequencies)
+is_main attribute is either true or false. If the Diagnosis/Symptom/Finding is the main Diagnosis/Symptom/Finding for the patient during the current admission (e.g., chief complaint, discharge diagnosis(primary), main Diagnosis/Symptom/Finding according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false (e.g., discharge diagnosis(secondary), not main Diagnosis/Symptom/Finding according to context).
+If the Procedure is the main Procedure for the patient during the current admission (e.g., major surgical or invasive procedure, main Procedure according to headers such as brief hospital course), it is set as is_main=true. If not, it is set as false.
+abnormal_flag attribute in Lab_Test, is either normal or abnormal.
+
+1. Procedure/Medication -> improves -> Diagnosis/Symptom/Finding
+2. Procedure/Medication -> worsens -> Diagnosis/Symptom/Finding
+3. Procedure/Medication -> causes -> Diagnosis/Symptom/Finding
+4. Procedure/Medication -> administered_for -> Diagnosis/Symptom/Finding
+5. Procedure/Medication -> reveals -> Diagnosis/Symptom/Finding
+6. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> reveals -> Diagnosis/Finding
+7. Specimen -> has_test -> Microbiology_Test/Lab_Test
+8. Microbiology_Test -> detected -> Microbiology_Organism
+9. Microbiology_Organism -> tested_against -> Microbiology_Antibiotics
+10. Microbiology_Organism -> reveals -> Diagnosis/Finding
+11. Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding
+12. Diagnosis/Symptom/Finding -> causes -> Event
+13. Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding/Activity
+14. Outcome/Finding -> after -> Diagnosis/Symptom/Finding
+15. Lab_Test/Diagnostic_Imaging_Test/Physical_Exam/Vital_Sign -> resulted_in -> Procedure/Medication
+16. Procedure/Medication -> causes -> Procedure/Medication
+17. Procedure/Medication -> causes -> Event
+18. Procedure/Medication -> switched_to -> Procedure/Medication
+19. Procedure/Medication -> resulted_in -> Outcome/Finding
+20. Outcome/Finding -> after -> Procedure/Medication
+21. Event -> causes -> Diagnosis/Symptom/Finding
+22. Event -> causes -> Procedure/Medication
+23. (any category) -> has_instruction -> Instruction
+The difference between "causes" and "resulted_in" in "Procedure/Medication -> causes -> Diagnosis/Symptom/Finding" and "Procedure/Medication -> resulted_in -> Outcome/Finding" is that "causes" is used when a procedure or medication produces an adverse effect or complication, while "resulted_in" is used when a procedure or medication leads to a desired or expected state or improvement (positive or neutral).
+Similarly, the difference between "causes" and "resulted_in" in "Diagnosis/Symptom/Finding -> causes -> Diagnosis/Symptom/Finding" and "Diagnosis/Symptom/Finding -> resulted_in -> Outcome/Finding" is that "causes" is used when a diagnosis, symptom, or finding produces an adverse effect or complication, while "resulted_in" is used when a diagnosis, symptom, or finding leads to a desired or expected state or improvement (positive or neutral).
+
+[Patient's Discharge Summaries]
+{discharge_summaries}
+
+[Initial Multi-turn QA]
+{multiturn_qa_step1}

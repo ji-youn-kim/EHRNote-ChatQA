@@ -1,0 +1,67 @@
+[Template 1 - Clinical Assessment Used to Rule Out Competing Diagnoses]
+Q1. Were any diagnoses initially suspected based on presenting clinical assessments?
+A1. (Diagnosis.status; Diagnosis.assertion; time = admission)
+Q2. What assessments were performed to evaluate those suspected conditions?
+A2. (Lab_Test; Diagnostic_Imaging_Test; Physical_Exam; Vital_Sign; time)
+Q3. Did any of those assessment findings rule out a suspected condition?
+A3. (Lab_Test / Diagnostic_Imaging_Test / Vital_Sign / Physical_Exam → reveals → Diagnosis with negative assertion)
+Q4. After those exclusionary results, were any findings documented that confirmed the final diagnosis?
+A4. (Lab_Test / Diagnostic_Imaging_Test / Vital_Sign / Physical_Exam → reveals → Diagnosis; clinical reasoning from notes linking the positive findings to the confirmed diagnosis)
+Q5. Was any treatment decision made based on the clarified diagnosis?
+A5. (Procedure/Medication → administered_for → Diagnosis)
+Q6. Were any assessment findings at discharge that supported clinical stability?
+A6. (Lab_Test.value; Vital_Sign.status; Physical_Exam.finding; Diagnostic_Imaging_Test.result; Outcome.status; time = discharge)
+
+[Template 2 - Assessment-Guided Monitoring and Treatment Adjustment]
+Q1. Were there any assessment findings that prompted initiation or adjustment of treatment during admission?
+A1. (Lab_Test / Vital_Sign / Physical_Exam / Diagnostic_Imaging_Test → resulted_in → Medication/Procedure)
+Q2. How frequently were those assessments repeated?
+A2. (Lab_Test.frequency; Vital_Sign.frequency; Physical_Exam.frequency; time intervals during admission)
+Q3. Did repeat assessments show improvement after treatment?
+A3. (Medication/Procedure → resulted_in → Outcome/Finding; Lab_Test.value normalization; Vital_Sign.status improvement)
+Q4. Were there any assessment findings that worsened despite treatment?
+A4. (Medication/Procedure → worsens → Diagnosis/Symptom/Finding OR Outcome/Finding → after → Medication/Procedure)
+Q5. Did those findings improve, and if not, was the treatment plan modified in response?
+A5. (Medication/Procedure → switched_to → Medication/Procedure; clinical reasoning from notes linking the worsening findings to the specific treatment modification)
+Q6. What were the clinical assessment values at discharge?
+A6. (Lab_Test.value; Vital_Sign.value/status; Physical_Exam.finding; Diagnostic_Imaging_Test.result; Outcome.status; time = discharge)
+
+[Template 3 - Complication Detection Through Clinical Assessment]
+Q1. Were there any new abnormal clinical findings during hospitalization?
+A1. (Lab_Test.abnormal_flag; Vital_Sign.status; Physical_Exam.finding; Diagnostic_Imaging_Test.result; time)
+Q2. Did any procedure or medication cause the new abnormal finding?
+A2. (Procedure/Medication → causes → Diagnosis/Symptom/Finding)
+Q3. Were any assessments used to confirm the complication?
+A3. (Lab_Test / Diagnostic_Imaging_Test / Vital_Sign / Physical_Exam → reveals → Diagnosis/Finding)
+Q4. Was any treatment initiated to manage the complication?
+A4. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding)
+Q5. Did follow-up assessments show resolution of the complication?
+A5. (Medication/Procedure → resulted_in → Outcome/Finding; Lab_Test.value trend; Vital_Sign improvement)
+Q6. What was the patient's final assessment status at discharge?
+A6. (Outcome.status; Lab_Test.value; Vital_Sign.status; Physical_Exam.finding; Diagnostic_Imaging_Test.result)
+
+[Template 4 - Discharge Assessment and Follow-Up Planning Based on Residual Abnormalities]
+Q1. What were the patient's clinical assessment findings on the day of discharge?
+A1. (Lab_Test.value; Lab_Test.abnormal_flag; Vital_Sign.status/value; Physical_Exam.finding; Diagnostic_Imaging_Test.result; time = discharge)
+Q2. Were any abnormalities still present at discharge?
+A2. (Lab_Test.abnormal_flag; Vital_Sign.status; Physical_Exam.finding; Diagnostic_Imaging_Test.result)
+Q3. What was the documented clinical reasoning for managing those persistent abnormalities as outpatient?
+A3. (clinical reasoning from notes explaining why persistent findings did not preclude discharge; Diagnosis/Symptom/Finding → has_instruction → Instruction)
+Q4. Were any follow-up tests or imaging recommended based on those assessment findings?
+A4. (Diagnosis/Symptom/Finding → resulted_in → Lab_Test/Diagnostic_Imaging_Test)
+Q5. What was the overall clinical outcome based on the final assessments?
+A5. (Outcome.status; Outcome/Finding → after → Procedure/Medication)
+
+[Template 5 - Treatment Adjustment Guided by Reassessment]
+Q1. What was the patient's initial clinical status at admission based on exam findings and lab/imaging results?
+A1. (Physical_Exam.finding, Lab_Test.value/abnormal_flag, Vital_Sign.value/status, Diagnostic_Imaging_Test.result; time = admission)
+Q2. Was any treatment started initially, and what was it targeting?
+A2. (Medication/Procedure → administered_for → Diagnosis/Symptom/Finding)
+Q3. Were there any assessment findings during the hospital course that indicated the initial treatment was insufficient or causing adverse effects?
+A3. (Medication/Procedure → worsens → Diagnosis/Symptom/Finding; Medication/Procedure → causes → Diagnosis/Symptom/Finding; Lab_Test/Vital_Sign trend worsening)
+Q4. Did the reassessment findings show adequate response, and if not, were any changes to treatment made?
+A4. (Medication/Procedure → switched_to → Medication/Procedure; Lab_Test/Vital_Sign/Physical_Exam → resulted_in → Medication/Procedure; clinical reasoning linking reassessment to treatment change)
+Q5. Did the treatment modification lead to clinical improvement on reassessment?
+A5. (Medication/Procedure → resulted_in → Outcome/Finding; Lab_Test.value normalization; Vital_Sign.value improvement)
+Q6. What were the assessment results at discharge after treatment was optimized?
+A6. (Lab_Test.value, Vital_Sign.value, Physical_Exam.finding at discharge; Outcome.status)

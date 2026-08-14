@@ -1,0 +1,9 @@
+[Discharge Summaries]
+{discharge summaries}
+
+Question: {question}
+
+Answer the question directly in prose (e.g., in 1-4 sentences).
+Answer only what is asked; do not add unnecessary background, do not summarize the admission unless asked, and do not list note numbers or section headers.
+
+Answer:

@@ -1,0 +1,65 @@
+[Template 1 - In-Hospital Complications, Rescue Interventions, and Final Outcome]
+Q1. Did the patient experience any complications or clinical deterioration during admission?
+A1. (Event.assertion/time; Diagnosis/Symptom/Finding.status change; Outcome.status change)
+Q2. Were any clinical findings or test results documented that signaled the complication or deterioration?
+A2. (Lab_Test.abnormal_flag/value; Vital_Sign.status/value; Physical_Exam.finding; Diagnostic_Imaging_Test.result → reveals → Diagnosis/Finding)
+Q3. Was any underlying cause identified for the complication?
+A3. (Procedure/Medication → causes → Diagnosis/Symptom/Finding; Diagnosis/Symptom/Finding → causes → Event)
+Q4. Were any treatments or procedures initiated in response to the identified cause?
+A4. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding; Lab_Test/Vital_Sign → resulted_in → Procedure/Medication)
+Q5. Did the interventions resolve or improve the complication before discharge?
+A5. (Procedure/Medication → improves → Diagnosis/Symptom/Finding; Procedure/Medication → resulted_in → Outcome/Finding; Procedure/Medication → worsens → Diagnosis/Symptom/Finding)
+Q6. What was the final outcome status at discharge, and were there any residual deficits?
+A6. (Outcome.status; Diagnosis/Symptom/Finding.status; Activity.status at discharge)
+
+[Template 2 - Treatment Goal Attainment]
+Q1. What was the primary clinical problem driving admission?
+A1. (Diagnosis.is_main; Symptom.is_main; Finding.is_main)
+Q2. What interventions were used to treat that problem?
+A2. (Procedure/Medication → administered_for → Diagnosis/Symptom/Finding)
+Q3. Was the primary problem resolved, improved, or still active at discharge?
+A3. (Outcome.status; Diagnosis/Symptom/Finding.status at discharge; Outcome → after → Procedure/Medication)
+Q4. Was there any evidence supporting whether the treatment goal was achieved?
+A4. (Lab_Test.value/abnormal_flag; Vital_Sign.value; Physical_Exam.finding; Diagnostic_Imaging_Test.result)
+Q5. If the goal was not fully achieved, were any barriers, side effects, or complications documented as contributing?
+A5. (Procedure/Medication → causes → Diagnosis/Symptom/Finding; Procedure/Medication → worsens → Diagnosis/Symptom/Finding; Diagnosis/Symptom/Finding → causes → Event)
+Q6. How was the follow-up plan designed to address those barriers and the remaining problem?
+A6. (Any category → has_instruction → Instruction; continued/planned Procedure/Medication; clinical reasoning from notes linking residual issues to the follow-up strategy)
+
+[Template 3 - Functional Outcome, Disposition, and Post-Discharge Support Needs]
+Q1. What was the patient's functional status at the time of discharge?
+A1. (Activity.status at discharge; Physical_Exam.finding relevant to mobility/function)
+Q2. Were there any clinical problems or outcomes that limited the patient's function at discharge?
+A2. (Diagnosis/Symptom/Finding → resulted_in → Outcome/Finding; Outcome → after → Diagnosis/Symptom/Finding)
+Q3. Did the patient require any assistive devices, home services, or rehabilitation after discharge?
+A3. (Medical_Device.status; Activity.status; Outcome.assertion)
+Q4. What discharge disposition was selected based on those functional limitations and support needs?
+A4. (Outcome.status/time; Activity.status; Diagnosis/Symptom/Finding.status driving disposition decision)
+Q5. Were any follow-up appointments, therapy, or instructions arranged to support functional recovery?
+A5. (Any category → has_instruction → Instruction; Procedure/Medication planned/continued post-discharge)
+
+[Template 4 - Medication Adjustments During Admission and Their Effect on Outcome]
+Q1. Were any medications started, adjusted, or discontinued during admission, and why?
+A1. (Medication.assertion/time; Procedure/Medication → administered_for → Diagnosis/Symptom/Finding; Procedure/Medication → switched_to → Procedure/Medication)
+Q2. Did any medication cause adverse effects or complications during the admission?
+A2. (Procedure/Medication → causes → Diagnosis/Symptom/Finding; Procedure/Medication → worsens → Diagnosis/Symptom/Finding)
+Q3. How were those adverse effects managed, and were medications adjusted as a result?
+A3. (Procedure/Medication → switched_to → Procedure/Medication; Procedure/Medication → causes → Procedure/Medication; Procedure/Medication → administered_for → Diagnosis/Symptom/Finding)
+Q4. What was the overall effect of the final medication regimen on the patient's primary condition by discharge?
+A4. (Procedure/Medication → improves → Diagnosis/Symptom/Finding; Procedure/Medication → resulted_in → Outcome/Finding; Outcome → after → Procedure/Medication)
+Q5. What medications were prescribed at discharge, and were any instructions given regarding their use?
+A5. (Medication.strength/dosage/route/instruction at discharge; Any category → has_instruction → Instruction)
+
+[Template 5 - Goal Attainment and Residual Risk at Discharge]
+Q1. What was the intended treatment goal during admission?
+A1. (Diagnosis/Symptom/Finding.is_main)
+Q2. Was the treatment goal achieved by discharge?
+A2. (Outcome.status at discharge, Diagnosis/Symptom/Finding.status at discharge, Outcome → after → Diagnosis/Symptom/Finding)
+Q3. Was there any objective data confirming goal attainment?
+A3. (Lab_Test.value/abnormal_flag, Vital_Sign.status/value, Physical_Exam.finding, Diagnostic_Imaging_Test.result)
+Q4. If the goal was not fully achieved, were any factors documented as contributing to the incomplete response?
+A4. (Procedure/Medication → causes → Diagnosis/Symptom/Finding, Diagnosis/Symptom/Finding → causes → Event, Procedure/Medication → worsens → Diagnosis/Symptom/Finding)
+Q5. What was the documented clinical reasoning for determining which residual conditions posed the highest risk?
+A5. (clinical reasoning from notes linking residual conditions to specific risk factors; Persistent Diagnosis/Symptom/Finding.status; Outcome.status = partial/stable with deficits)
+Q6. Was any follow-up plan established to prevent worsening?
+A6. (Any category → has_instruction → Instruction, Planned/continued Medication/Procedure)

@@ -1,0 +1,63 @@
+[Template 1 - Medication Reconciliation and Post-Discharge Medication Plan]
+Q1. What medications was the patient instructed to take after discharge at admission |chartdate or admission_id|?
+A1. (Medication.assertion; Medication.time = discharge)
+Q2. Compared with the medications in admission |chartdate or admission_id|, were any of those medications newly started, stopped, held, or dose-adjusted?
+A2. (Medication.status/time comparison; Medication.dosage/route/frequency changes)
+Q3. For those medications, what clinical conditions or symptoms were they intended to treat?
+A3. (Medication → administered_for → Diagnosis/Symptom/Finding)
+Q4. What was the documented reasoning that explained the evolution of the medication plan from one discharge to the next?
+A4. (clinical reasoning from notes linking cross-admission clinical changes to the medication adjustments; Medication → administered_for → Diagnosis/Symptom/Finding)
+Q5. Were any monitoring instructions provided for those treatments after discharge?
+A5. (Medication → has_instruction → Instruction)
+Q6. In the instructions associated with those treatments, were there any warnings about adherence or risks if the medications were stopped or taken incorrectly?
+A6. (Instruction.instruction_text; Event risk framing if present)
+
+[Template 2 - Red Flags, Return Precautions, and Symptom Monitoring]
+Q1. At discharge from admission |chartdate or admission_id|, were any warning symptoms or clinical changes that the patient should watch for at home documented?
+A1. (Symptom/Finding → has_instruction → Instruction)
+Q2. Which underlying condition or complication were those warning signs intended to detect early or prevent?
+A2. (Diagnosis/Symptom/Finding → has_instruction → Instruction)
+Q3. What was the documented reasoning for emphasizing those specific warning signs based on the patient's hospital course?
+A3. (clinical reasoning from notes linking the hospital course — complications, persistent findings, or high-risk conditions — to the specific warning signs selected)
+Q4. If those warning signs occurred, what actions was the patient instructed to take?
+A4. (Instruction.instruction_text)
+Q5. Within the guidance related to those warning signs, were any objective thresholds provided that would trigger action?
+A5. (Instruction.instruction_text with numeric thresholds; Vital_Sign.value targets if present)
+Q6. Beyond watching for those warning signs, was any follow-up monitoring plan arranged to track recovery?
+A6. (Instruction.instruction_text; Event.status = scheduled if represented)
+
+[Template 3 - Follow-up Appointments and Care Coordination]
+Q1. At discharge from admission |chartdate or admission_id|, were any follow-up appointments, referrals, or services arranged for the patient?
+A1. (Instruction.instruction_text; Event.status = scheduled)
+Q2. What clinical problems or conditions were those follow-ups intended to address?
+A2. (Diagnosis/Symptom/Finding/Outcome → has_instruction → Instruction)
+Q3. As part of that follow-up plan, were any diagnostic tests scheduled?
+A3. (Lab_Test / Diagnostic_Imaging_Test / Microbiology_Test planned; Instruction)
+Q4. Were any instructions given about the timing or urgency of those follow-ups, and who the patient should contact?
+A4. (Instruction.time; Instruction.instruction_text)
+Q5. If the patient was unable to complete those follow-ups, were any contingency instructions documented?
+A5. (Instruction.instruction_text; social work/case management references if present)
+
+[Template 4 - Disposition, Functional Plan, and Post-Discharge Supports]
+Q1. What was the patient's disposition at discharge at admission |chartdate or admission_id|, and why?
+A1. (Outcome.assertion/status; Activity.status)
+Q2. What was the patient's functional or activity level at the time of discharge?
+A2. (Activity.status, time = discharge)
+Q3. Did the patient require any medical devices or supportive services after discharge?
+A3. (Medical_Device.status; Activity.status; Instruction)
+Q4. Were any activity restrictions or rehabilitation instructions provided in relation to that support plan?
+A4. (Instruction.instruction_text; Activity-related instructions)
+Q5. Were any criteria given for advancing activity or seeking reassessment?
+A5. (Instruction.instruction_text; thresholds or time-based progression)
+
+[Template 5 - Cross-Admission Discharge Plan Adherence and Readmission Link]
+Q1. What were the discharge instructions given after admission |chartdate or admission_id|?
+A1. (Any category → has_instruction → Instruction; time = prior discharge)
+Q2. At the next hospitalization, was there evidence that those instructions were followed or not followed?
+A2. (Event.status = missed follow-up / non-adherence; Medication.status = not taking)
+Q3. Among those instructions, were any aspects of non-adherence clinically significant?
+A3. (Medication.status; Event.status; Symptom.status)
+Q4. What was the documented clinical reasoning that connected those non-adherence failures to the current presentation at readmission?
+A4. (clinical reasoning from notes linking specific non-adherence to clinical deterioration; Medication → worsens → Diagnosis/Symptom/Finding; Event → causes → Diagnosis/Symptom/Finding)
+Q5. At the most recent discharge, was the discharge plan modified to reduce the risk of recurrence or improve adherence?
+A5. (Updated Instruction; Medication adjustments; follow-up changes across admissions)
