@@ -123,7 +123,7 @@ also log answers that could not be matched to a letter A-E.
 
 ### Answer format
 
-``--generate`` switches from multiple choice to open-ended generation. The
+``--generate`` switches from multiple choice to free-text generation. The
 multi-turn protocol is unchanged — same samples, same order, same history
 from the model's own answers — only the turn presentation differs:
 
@@ -175,6 +175,8 @@ over the 967 samples.
 ---
 
 ## Scoring
+
+### Scoring multiple-choice runs (default)
 
 ```bash
 python scoring/multiturn_qa_scoring.py \
@@ -250,7 +252,7 @@ bash scripts/run_evaluate_api.sh
 # 4. Aggregate per-model accuracy into a summary table
 bash scripts/run_scoring.sh
 
-# 5. (free-text runs only) judge the generations, then score them
+# 5. (Free-text runs only) judge the generations, then score them
 bash scripts/run_generation_eval.sh
 ```
 
