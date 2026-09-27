@@ -1,6 +1,6 @@
 # EHRNote-ChatQA
 
-Official Code for [EHRNote-ChatQA: A Benchmark for Evidence-Grounded Multi-Turn Clinical Question Answering over Longitudinal Discharge Summaries](https://arxiv.org/abs/2606.15735).
+[NeurIPS 2026 Evaluations & Datasets] Official Code for [EHRNote-ChatQA: A Benchmark for Evidence-Grounded Multi-Turn Clinical Question Answering over Longitudinal Discharge Summaries](https://arxiv.org/abs/2606.15735).
 
 The benchmark itself (967 multi-turn samples, 16,072 medical-expert-verified
 QA pairs across 8 clinical categories) will be released separately on
